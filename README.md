@@ -6,7 +6,8 @@ Repositório contém o Programa do jogo Rise, desenvolvido pelos alunos do segun
 Para acessar o jogo será necessário ou a abertura do arquivo .exe ou pelo Dev C++ conténdo a plataforma gráfica BGI
 No uso da biblioteca gráfica BGI, será necessário adicionar os arquivos graphics.h e libbgi.a nos seguintes endereços:
 
-graphics.h | C:\Arquivos de Programas (x86)\Dev-Cpp\MinGW64\include 
+graphics.h | C:\Arquivos de Programas (x86)\Dev-Cpp\MinGW64\include
+
 libbgi.a   | C:\Arquivos de Programas (x86)\Dev-Cpp\MinGW64\lib
 
 Para então conseguir abrir o arquivo .dev
