@@ -98,8 +98,6 @@ int main(void){
 	int passo_inimigos = 5, andando = 0;
 	bool morte = false;
 	
-	int parte_do_game_chao = 0;
-	
 	int tempo = 1;
 	int fim_tela;
 	double velocidade_pos = 1.0, velocidade_neg = 1.0, velocidade, Velocidade_Max = 1.5;
@@ -239,11 +237,13 @@ int main(void){
 			
 			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);
 			
-			for (i = parte_do_game_chao; i < Qtde_chao; i++){
+			for (i = 0; i < Qtde_chao; i++){
+				if ((colisao_chao[i].y <= Alt && colisao_chao[i].altura >= 0 && colisao_chao[i].x <= Larg && colisao_chao[i].largura >= 0)) // Controle de Render
 				barra(colisao_chao[i].x,colisao_chao[i].y,colisao_chao[i].largura,colisao_chao[i].altura,jade);
 			}	
 			
 			for (i = 0; i < Qtde_inimigos; i++){
+				if ((inimigos[i].y <= Alt && inimigos[i].altura >= 0 && inimigos[i].x <= Larg && inimigos[i].largura >= 0)) // Controle de Render
 				barra(inimigos[i].x, inimigos[i].y, inimigos[i].largura, inimigos[i].altura,escarlate);
 			}
 			
@@ -251,11 +251,6 @@ int main(void){
 			
 			setvisualpage(pg);
 			
-	//___________________________________________________________________________________ Controle de render ->
-			for (i = 0; i < Qtde_chao; i++){
-				if (colisao_chao[i].y >= Alt) parte_do_game_chao = i+1;
-			}
-
 	//___________________________________________________________________________________ Movimento de inimigos -> Inimigo 1
 			andando = andando + passo_inimigos;
 			if (inimigos[0].x < colisao_chao[7].x){
@@ -282,7 +277,7 @@ int main(void){
 				if (velocidade_pos < 1) velocidade_pos = 1;				
 				inicio = inicio + (5*velocidade_pos);
 				
-				for (i = parte_do_game_chao; i < Qtde_chao; i++){
+				for (i = 0; i < Qtde_chao; i++){
 					if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
 						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
 					}
@@ -295,7 +290,7 @@ int main(void){
 				if (Pulo == false){
 					inicio = inicio + (5*velocidade_pos);
 					
-					for (i = parte_do_game_chao; i < Qtde_chao; i++){
+					for (i = 0; i < Qtde_chao; i++){
 						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
 							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
 						}
@@ -309,7 +304,7 @@ int main(void){
 				inicio = inicio - (5*velocidade_neg);		
 				
 				
-				for (i = parte_do_game_chao; i < Qtde_chao; i++){
+				for (i = 0; i < Qtde_chao; i++){
 					if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
 						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
 					}
@@ -322,7 +317,7 @@ int main(void){
 				if (Pulo == false){
 					inicio = inicio - (5*velocidade_neg);	
 						
-					for (i = parte_do_game_chao; i < Qtde_chao; i++){
+					for (i = 0; i < Qtde_chao; i++){
 						if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
 							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
 						}
@@ -343,11 +338,13 @@ int main(void){
 				psg.y = psg.y - Passo_Y-15-(velocidade);
 				psg.altura = psg.altura - Passo_Y-15-(velocidade);
 				
-				for (i = parte_do_game_chao; i < Qtde_chao; i++){
+				for (i = 0; i < Qtde_chao; i++){
 					if (psg.x <= colisao_chao[i].largura && psg.largura >= colisao_chao[i].x){
 						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y){
 						psg.y = colisao_chao[i].altura;
 						psg.altura = psg.y + altura_psg; 
+						tempo = 0;
+						Pulo = false;
 						break;	
 						} 	
 					}
@@ -362,7 +359,7 @@ int main(void){
 				psg.altura = psg.altura + (Passo_Y*(tempo*multiplicador));
 			}
 						
-			for (i = parte_do_game_chao; i < Qtde_chao; i++){
+			for (i = 0; i < Qtde_chao; i++){
 				if (psg.x <= colisao_chao[i].largura && psg.largura >= colisao_chao[i].x){
 					if(psg.y <= colisao_chao[i].altura && psg.altura >= colisao_chao[i].y) {chao = true; break;}
 					else chao = false;
