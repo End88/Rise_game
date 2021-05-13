@@ -6,10 +6,10 @@ ________________________________________________________________________________
 ### Repositório contém o Programa do jogo Rise, desenvolvido pelos alunos do segundo semestre da Fatec São Caetano do Sul
 _____________________________________________________________________________________________________________________
 
-Para acessar o jogo será necessário ou a abertura do arquivo .exe ou pelo Dev C++ conténdo a plataforma gráfica BGI
+Para acessar o jogo será necessário o Dev C++ conténdo a plataforma gráfica BGI
 
 
-No uso da biblioteca gráfica BGI, será necessário adicionar os arquivos graphics.h e libbgi.a nos seguintes endereços:
+Para o uso da biblioteca gráfica BGI, será necessário adicionar os arquivos graphics.h e libbgi.a nos seguintes endereços:
 
 
 | graphics.h | C:\Arquivos de Programas (x86)\Dev-Cpp\MinGW64\include |
