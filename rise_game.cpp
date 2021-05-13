@@ -78,7 +78,7 @@ void fundo(int inicio, int Larg, int Alt, int i, int X, int Linha_de_fim){
 	
 	
 	}
-	
+
 struct TQUADRADO{
      double x;       
 	 double y;       
@@ -86,6 +86,13 @@ struct TQUADRADO{
 	 double altura; 
 };
 
+static TQUADRADO defineFundo(TQUADRADO estrutura, int x, int y, int largura, int altura, double inicio, int Alt, int Larg, double altitude){
+	estrutura.x = inicio + Larg + x;
+	estrutura.y = Alt-altitude - y;
+	estrutura.largura = inicio+Larg+largura;
+	estrutura.altura = Alt - altitude - altura;
+	return estrutura;
+}
 
 int main(void){
 	
@@ -175,6 +182,8 @@ int main(void){
 			gt1 = gt2;
 			
 			// ______________________________________ Desenho do chão			
+			defineFundo(colisao_chao[0],-Larg,50,0,0,inicio,Alt,Larg,altitude);
+			
 			colisao_chao[0].x = inicio;
 			colisao_chao[0].y = Alt-50-altitude;	
 			colisao_chao[0].largura = inicio+Larg;
