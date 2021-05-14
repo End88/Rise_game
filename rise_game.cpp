@@ -87,11 +87,12 @@ struct TQUADRADO{
 };
 
 static TQUADRADO defineFundo(TQUADRADO estrutura, int x, int y, int largura, int altura, double inicio, int Alt, int Larg, double altitude){
-	estrutura.x = inicio + Larg + x;
-	estrutura.y = Alt-altitude - y;
-	estrutura.largura = inicio+Larg+largura;
-	estrutura.altura = Alt - altitude - altura;
-	return estrutura;
+	TQUADRADO r;
+	r.x = inicio + Larg + x;
+	r.y = Alt-altitude - y;
+	r.largura = inicio+Larg+largura;
+	r.altura = Alt - altitude - altura;
+	return estrutura = r;
 }
 
 int main(void){
