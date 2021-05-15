@@ -78,7 +78,7 @@ void fundo(int inicio, int Larg, int Alt, int i, int X, int Linha_de_fim){
 	
 	
 	}
-	
+
 struct TQUADRADO{
      double x;       
 	 double y;       
@@ -86,12 +86,20 @@ struct TQUADRADO{
 	 double altura; 
 };
 
+TQUADRADO *colisao_chao;
+
+void defineFundo(int Num_Quad,int x, int y, int largura, int altura){
+	colisao_chao[Num_Quad].x = colisao_chao[Num_Quad].x + x;
+	colisao_chao[Num_Quad].y = colisao_chao[Num_Quad].y - y;
+	colisao_chao[Num_Quad].largura = colisao_chao[Num_Quad].largura+largura;
+	colisao_chao[Num_Quad].altura = colisao_chao[Num_Quad].altura - altura;
+}
 
 int main(void){
 	
 	char tecla = 0;
 	
-	TQUADRADO *colisao_chao,*inimigos, psg;
+	TQUADRADO *inimigos, psg;
 	int Qtde_chao, Qtde_inimigos;
 	int passo_inimigos = 5, andando = 0;
 	bool morte = false;
@@ -175,50 +183,22 @@ int main(void){
 			gt1 = gt2;
 			
 			// ______________________________________ Desenho do chão			
-			colisao_chao[0].x = inicio;
-			colisao_chao[0].y = Alt-50-altitude;	
-			colisao_chao[0].largura = inicio+Larg;
-			colisao_chao[0].altura = Alt-altitude;
+			for (i = 0; i < Qtde_chao; i++){
+				colisao_chao[i].x = inicio+Larg;
+				colisao_chao[i].y = Alt-altitude;	
+				colisao_chao[i].largura = inicio+Larg;
+				colisao_chao[i].altura = Alt-altitude;
+			}
 			
-			colisao_chao[1].x = inicio+Larg+100;
-			colisao_chao[1].y = Alt-80-altitude;	
-			colisao_chao[1].largura = inicio+Larg+400;
-			colisao_chao[1].altura = Alt-40-altitude;
-			
-			colisao_chao[2].x = inicio+Larg/2+50;
-			colisao_chao[2].y = Alt-80-altitude;	
-			colisao_chao[2].largura = inicio+Larg/2+70;
-			colisao_chao[2].altura = Alt-40-altitude;
-			
-			colisao_chao[3].x = inicio+Larg+500;
-			colisao_chao[3].y = Alt-110-altitude;	
-			colisao_chao[3].largura = inicio+Larg+700;
-			colisao_chao[3].altura = Alt-100-altitude;
-			
-			colisao_chao[4].x = inicio+Larg+750;
-			colisao_chao[4].y = Alt-150-altitude;	
-			colisao_chao[4].largura = inicio+Larg+800;
-			colisao_chao[4].altura = Alt-145-altitude;
-			
-			colisao_chao[5].x = inicio+Larg+650;
-			colisao_chao[5].y = Alt-235-altitude;	
-			colisao_chao[5].largura = inicio+Larg+695;
-			colisao_chao[5].altura = Alt-230-altitude;
-			
-			colisao_chao[6].x = inicio+Larg+800;
-			colisao_chao[6].y = Alt-290-altitude;	
-			colisao_chao[6].largura = inicio+Larg+900;
-			colisao_chao[6].altura = Alt-285-altitude;
-			
-			colisao_chao[7].x = inicio+Larg+1000;
-			colisao_chao[7].y = Alt-340-altitude;	
-			colisao_chao[7].largura = inicio+Larg+1500;
-			colisao_chao[7].altura = Alt-335-altitude;
-			
-			colisao_chao[8].x = inicio+Larg/2-100;
-			colisao_chao[8].y = Alt-150-altitude;	
-			colisao_chao[8].largura = inicio+Larg/2-50;
-			colisao_chao[8].altura = Alt-140-altitude;
+			defineFundo(0,-Larg,50,0,0);
+			defineFundo(1,100,80,400,40);
+			defineFundo(2,-Larg/2+50,80,-Larg/2+70,40);
+			defineFundo(3,500,110,700,100);
+			defineFundo(4,750,150,800,145);
+			defineFundo(5,650,235,695,230);
+			defineFundo(6,800,290,900,285);
+			defineFundo(7,1000,340,1500,335);
+			defineFundo(8,-Larg/2-100,150,-Larg/2-50,140);
 			
 			//_________________________________________ Desenho dos inimigos
 			inimigos[0].x = inicio+Larg+1200+andando;
