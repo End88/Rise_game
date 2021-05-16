@@ -14,6 +14,7 @@ Thiago Oliveira Monte Alves de Araujo
 #include<time.h>
 
 #define ESC 27
+#define QtdePsg  3
 
 void quadrado(int Ponto_X1, int Ponto_Y1, int Ponto_X2, int Ponto_Y2, int cor[]){
 	setcolor(RGB(cor[0],cor[1],cor[2]));
@@ -79,6 +80,47 @@ void fundo(int inicio, int Larg, int Alt, int i, int X, int Linha_de_fim){
 	
 	}
 
+<<<<<<< HEAD
+=======
+void GravaArq(char *NomeArq, unsigned char *V, int Tam) {
+  FILE *Arq;
+  int i;
+  Arq = fopen(NomeArq, "w");
+  for(i = 0; i < Tam; i++)
+    if (V[i] != 10)
+      fprintf(Arq, "(%4d) %d = '%c'\n", i, V[i], V[i]);
+    else
+      fprintf(Arq, "(%4d) %d = ''\n", i, V[i]);
+  fclose(Arq);
+}
+
+void PreparaImg(int Tam, unsigned char *Img, unsigned char *Msk) {
+// Tam é o tamanho dos ponteiros da imagem e da máscara
+// Img é o ponteiro que aponta para o vetor que contém a imagem capturada com getimage(..)
+// Msk é o ponteiro que será transformado em máscara
+  int i;
+  unsigned char B, G, R;
+  B = Img[24];
+  G = Img[25];
+  R = Img[26];
+  for(i=24; i < Tam; i+=4) {
+    if (Img[i]==B and Img[i+1]==G and Img[i+2]==R) {
+      Img[i] = 0;
+      Img[i+1] = 0;
+      Img[i+2] = 0;
+      Msk[i] = 255;
+      Msk[i+1] = 255;
+      Msk[i+2] = 255;
+    }
+    else {
+      Msk[i] = 0;
+      Msk[i+1] = 0;
+      Msk[i+2] = 0;
+    }
+  }
+}
+	
+>>>>>>> Insertimages
 struct TQUADRADO{
      double x;       
 	 double y;       
@@ -98,6 +140,9 @@ void defineFundo(int Num_Quad,int x, int y, int largura, int altura){
 int main(void){
 	
 	char tecla = 0;
+	//_____________________________________ Definições de images
+	int tam,ande = 0;
+	unsigned char *R[QtdePsg], *M[QtdePsg];	
 	
 	TQUADRADO *inimigos, psg;
 	int Qtde_chao, Qtde_inimigos;
@@ -147,21 +192,41 @@ int main(void){
 	Alt = 480;
 	initwindow(Larg, Alt,"Movimento Uniforme");
 	
+//_______________________________________________________________ Tratamento de imagens
+	//Imagem de tamanho 117 por 208
+	tam = imagesize(0,0,44, 27);
+	for(i = 0; i < QtdePsg; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+		R[i] = (unsigned char *)malloc(tam);
+		M[i] = (unsigned char *)malloc(tam);
+	} 
+	
+
+	readimagefile(".\\images\\move_1.bmp", 0, 0, 44, 27);
+	getimage(0, 0, 44, 27, R[0]); // captura para o ponteiro R
+	getimage(0, 0, 44, 27, M[0]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	
+	readimagefile(".\\images\\move_2.bmp", 0, 0, 44, 27);
+	getimage(0, 0, 44, 27, R[1]); // captura para o ponteiro R
+	getimage(0, 0, 44, 27, M[1]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	
+	readimagefile(".\\images\\move_3.bmp", 0, 0, 44, 27);
+	getimage(0, 0, 44, 27, R[2]); // captura para o ponteiro R
+	getimage(0, 0, 44, 27, M[2]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+
+	for(i = 0; i < QtdePsg; i++)
+		PreparaImg(tam, R[i], M[i]); // configura as cores branca e preta em cada pixel para formar o recorte
+
 	
 //_______________________________________________________________ 
 	
 	raio = 8;
-	altura_psg = 40;
-	largura_psg = 30;
-	pos_ini_X = Larg/2-(largura_psg/2);
-	pos_fin_X = pos_ini_X + largura_psg;
-	pos_ini_Y = Alt-altura_psg-50; 
-	pos_fin_Y = pos_ini_Y + altura_psg;
+	altura_psg = 28;
+	largura_psg = 40;
 		
 	psg.x = Larg/2-(largura_psg/2);
 	psg.y = Alt-altura_psg-50; 
-	psg.largura = pos_ini_X + largura_psg;
-	psg.altura = pos_ini_Y + altura_psg;
+	psg.largura = psg.x + largura_psg;
+	psg.altura = psg.y + altura_psg;
 	
 	Passo_X = 4;
 	Passo_Y = 1;
@@ -213,7 +278,10 @@ int main(void){
 			cleardevice();	
 			fundo(inicio,Larg,Alt,i,X,Fim_de_curso);
 			
-			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);
+//			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);
+
+			putimage(psg.x, psg.y, M[ande], AND_PUT);
+    		putimage(psg.x, psg.y, R[ande], OR_PUT);
 			
 			for (i = 0; i < Qtde_chao; i++){
 				if ((colisao_chao[i].y <= Alt && colisao_chao[i].altura >= 0 && colisao_chao[i].x <= Larg && colisao_chao[i].largura >= 0)) // Controle de Render
@@ -290,6 +358,9 @@ int main(void){
 				
 				if (velocidade_neg < Velocidade_Max) velocidade_neg += 0.1;
 				ultima_Vel_neg = velocidade_neg;
+				
+				ande++;
+				if (ande > 2) ande = 0;
 	
 			}else if(velocidade_neg > 0) {
 				if (Pulo == false){
@@ -380,6 +451,8 @@ int main(void){
 	} 
 	free(colisao_chao);
 	free(inimigos);
+	free(*R);
+	free(*M);
 	closegraph();	 
 	return 0;
 	
