@@ -80,8 +80,6 @@ void fundo(int inicio, int Larg, int Alt, int i, int X, int Linha_de_fim){
 	
 	}
 
-<<<<<<< HEAD
-=======
 void GravaArq(char *NomeArq, unsigned char *V, int Tam) {
   FILE *Arq;
   int i;
@@ -119,8 +117,32 @@ void PreparaImg(int Tam, unsigned char *Img, unsigned char *Msk) {
     }
   }
 }
+
+void FlipImg(int LargImg, int AltImag, unsigned char *Img) {
+// LargImag é a largura total da iamgem, uma imagem 200x100 equivale a 200
+// AltImag é a altura total da iamgem, uma imagem 200x100 equivale a 100
+// Img é o ponteiro que aponta para o vetor que contém a imagem capturada com getimage(..)
+	int i,n;
+	unsigned char aux1,aux2,aux3;
+
+	for (n = 1; n < AltImag; n++){
+		for(i=1; i < (LargImg*4)/2; i+=4) {
+		
+			aux1 = Img[((i-1)+(LargImg*4*n-(LargImg*4)))+24];
+			aux2 = Img[((i-1)+(LargImg*4*n-(LargImg*4)))+1+24];
+			aux3 = Img[((i-1)+(LargImg*4*n-(LargImg*4)))+2+24];
+			
+			Img[((i-1)+(LargImg*4*n-(LargImg*4)))+24] = Img[((LargImg*4*n)-(i-1)+23-3)];
+			Img[((i-1)+(LargImg*4*n-(LargImg*4)))+1+24] = Img[((LargImg*4*n)-(i-1)+1+23-3)];   
+			Img[((i-1)+(LargImg*4*n-(LargImg*4)))+2+24] = Img[((LargImg*4*n)-(i-1)+2+23-3)];
+			
+			Img[((LargImg*4*n)-(i-1)+23-3)] = aux1;
+			Img[((LargImg*4*n)-(i-1)+1+23-3)] = aux2;
+			Img[((LargImg*4*n)-(i-1)+2+23-3)] = aux3;
+		}
+	}
+}
 	
->>>>>>> Insertimages
 struct TQUADRADO{
      double x;       
 	 double y;       
@@ -142,13 +164,14 @@ int main(void){
 	char tecla = 0;
 	//_____________________________________ Definições de images
 	int tam,ande = 0;
-	unsigned char *R[QtdePsg], *M[QtdePsg];	
+	unsigned char *R[QtdePsg], *M[QtdePsg], *FlipR[QtdePsg], *FlipM[QtdePsg];	
 	
 	TQUADRADO *inimigos, psg;
 	int Qtde_chao, Qtde_inimigos;
 	int passo_inimigos = 5, andando = 0;
 	bool morte = false;
 	
+	int direcao = 1;
 	int tempo = 1;
 	int fim_tela;
 	double velocidade_pos = 1.0, velocidade_neg = 1.0, velocidade, Velocidade_Max = 1.5;
@@ -198,25 +221,38 @@ int main(void){
 	for(i = 0; i < QtdePsg; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		R[i] = (unsigned char *)malloc(tam);
 		M[i] = (unsigned char *)malloc(tam);
-	} 
-	
+		FlipR[i] = (unsigned char *)malloc(tam);
+		FlipM[i] = (unsigned char *)malloc(tam);
+	} 	
 
 	readimagefile(".\\images\\move_1.bmp", 0, 0, 44, 27);
 	getimage(0, 0, 44, 27, R[0]); // captura para o ponteiro R
 	getimage(0, 0, 44, 27, M[0]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 44, 27, FlipR[0]); // captura para o ponteiro R
+	getimage(0, 0, 44, 27, FlipM[0]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
 	
 	readimagefile(".\\images\\move_2.bmp", 0, 0, 44, 27);
 	getimage(0, 0, 44, 27, R[1]); // captura para o ponteiro R
 	getimage(0, 0, 44, 27, M[1]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 44, 27, FlipR[1]); // captura para o ponteiro R
+	getimage(0, 0, 44, 27, FlipM[1]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
 	
 	readimagefile(".\\images\\move_3.bmp", 0, 0, 44, 27);
 	getimage(0, 0, 44, 27, R[2]); // captura para o ponteiro R
 	getimage(0, 0, 44, 27, M[2]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
-
-	for(i = 0; i < QtdePsg; i++)
-		PreparaImg(tam, R[i], M[i]); // configura as cores branca e preta em cada pixel para formar o recorte
-
+	getimage(0, 0, 44, 27, FlipR[2]); // captura para o ponteiro R
+	getimage(0, 0, 44, 27, FlipM[2]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
 	
+
+	for(i = 0; i < QtdePsg; i++){
+		PreparaImg(tam, R[i], M[i]); // configura as cores branca e preta em cada pixel para formar o recorte
+		PreparaImg(tam, FlipR[i], FlipM[i]);} // configura as cores branca e preta em cada pixel para formar o recorte
+	
+	
+	for (i = 0; i < QtdePsg; i++){
+		FlipImg(45,28,FlipR[i]);
+		FlipImg(45,28,FlipM[i]);
+	}
 //_______________________________________________________________ 
 	
 	raio = 8;
@@ -279,9 +315,19 @@ int main(void){
 			fundo(inicio,Larg,Alt,i,X,Fim_de_curso);
 			
 //			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);
-
-			putimage(psg.x, psg.y, M[ande], AND_PUT);
-    		putimage(psg.x, psg.y, R[ande], OR_PUT);
+			
+			switch(direcao){
+				case 1: 
+					putimage(psg.x, psg.y, M[ande], AND_PUT);
+    				putimage(psg.x, psg.y, R[ande], OR_PUT);					
+					break;
+				
+				case 2: 
+					putimage(psg.x, psg.y, FlipM[ande], AND_PUT);
+    				putimage(psg.x, psg.y, FlipR[ande], OR_PUT);					
+					break;
+				
+			}
 			
 			for (i = 0; i < Qtde_chao; i++){
 				if ((colisao_chao[i].y <= Alt && colisao_chao[i].altura >= 0 && colisao_chao[i].x <= Larg && colisao_chao[i].largura >= 0)) // Controle de Render
@@ -331,6 +377,10 @@ int main(void){
 								
 				if (velocidade_pos < Velocidade_Max) velocidade_pos += 0.1;			
 				ultima_Vel_pos = velocidade_pos;
+				
+				direcao = 2;
+				ande++;
+				if (ande > 2) ande = 0;
 					
 			}else if (velocidade_pos > 0){
 				if (Pulo == false){
@@ -359,6 +409,7 @@ int main(void){
 				if (velocidade_neg < Velocidade_Max) velocidade_neg += 0.1;
 				ultima_Vel_neg = velocidade_neg;
 				
+				direcao = 1;
 				ande++;
 				if (ande > 2) ande = 0;
 	
@@ -401,6 +452,7 @@ int main(void){
 				
 				tempo++;
 			}
+			
 			if (chao == false){
 				if (tempo == 1) multiplicador = 5.0;
 				else multiplicador = 1.5;
