@@ -16,6 +16,8 @@ Thiago Oliveira Monte Alves de Araujo
 #define ESC 27
 #define QtdePsg  3
 
+int Larg, Alt; // Variáveis de largura e altura da tela
+
 void quadrado(int Ponto_X1, int Ponto_Y1, int Ponto_X2, int Ponto_Y2, int cor[]){
 	setcolor(RGB(cor[0],cor[1],cor[2]));
 	rectangle(Ponto_X1,Ponto_Y1,Ponto_X2,Ponto_Y2);
@@ -53,7 +55,7 @@ void ponto(int Ponto_X, int Ponto_Y, int cor[]){
 	putpixel(Ponto_X,Ponto_Y,RGB(cor[0],cor[1],cor[2]));
 }
 
-void fundo(int inicio, int Larg, int Alt, int i, int X, int Linha_de_fim){
+void fundo(int inicio, int Larg, int Alt, int i, int X){
 	
 	int vermelho[3] = {255,0,0};
 	int verde[3] = {0,255,0};
@@ -159,8 +161,7 @@ void defineFundo(int Num_Quad,int x, int y, int largura, int altura){
 	colisao_chao[Num_Quad].altura = colisao_chao[Num_Quad].altura - altura;
 }
 
-int main(void){
-	
+void fasejogo(){
 	char tecla = 0;
 	//_____________________________________ Definições de images
 	int tam,ande = 0;
@@ -173,22 +174,16 @@ int main(void){
 	
 	int direcao = 1;
 	int tempo = 1;
-	int fim_tela;
 	double velocidade_pos = 1.0, velocidade_neg = 1.0, velocidade, Velocidade_Max = 1.5;
-	double ultima_Vel_pos, ultima_Vel_neg;
 	double multiplicador;	
 	
-	int altura_psg, largura_psg, pos_ini_X, pos_ini_Y,pos_fin_X,pos_fin_Y;
-	int jump = 0;
+	int altura_psg, largura_psg;
 	double altitude = 0.0;
 	
 	int i,X,cont; // Variáveis i, X e cont armezenam informações dinámicas.
-	int Larg, Alt; // Variáveis de largura e altura da tela
 	double inicio = 0; // Váriável Início define o início da tela
 	int pg = 1; // Váriavel de pagina 
-	int raio,Passo_X,Passo_Y; // Variável do raio e passo das esferas móveis
-	int Alt_atual,Prox_Alt,Posi_X;
-	int Fim_de_curso = 0;
+	int Passo_X,Passo_Y; // Variável do raio e passo das esferas móveis
 	bool chao = true,Pulo = false;
 	bool inercia_Right = false, inercia_Left = false;
 	
@@ -208,12 +203,6 @@ int main(void){
 	printf("  Marcelo Kazuaki Shimada  \n");
 	printf("  Matheus Ferrandes de Mayo Gomes Beato  \n");
 	printf("  Thiago Oliveira Monte Alves de Araujo  \n\n");
-	
-//__________________________________________________________ inicialização da área gráfica
-
-	Larg = 640;
-	Alt = 480;
-	initwindow(Larg, Alt,"Movimento Uniforme");
 	
 //_______________________________________________________________ Tratamento de imagens
 	//Imagem de tamanho 117 por 208
@@ -255,7 +244,6 @@ int main(void){
 	}
 //_______________________________________________________________ 
 	
-	raio = 8;
 	altura_psg = 28;
 	largura_psg = 40;
 		
@@ -312,7 +300,7 @@ int main(void){
 			
 			setbkcolor(RGB(0,0,205));
 			cleardevice();	
-			fundo(inicio,Larg,Alt,i,X,Fim_de_curso);
+			fundo(inicio,Larg,Alt,i,X);
 			
 //			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);
 			
@@ -374,10 +362,7 @@ int main(void){
 						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
 					}
 				}
-								
-				if (velocidade_pos < Velocidade_Max) velocidade_pos += 0.1;			
-				ultima_Vel_pos = velocidade_pos;
-				
+												
 				direcao = 2;
 				ande++;
 				if (ande > 2) ande = 0;
@@ -405,10 +390,7 @@ int main(void){
 						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
 					}
 				}
-				
-				if (velocidade_neg < Velocidade_Max) velocidade_neg += 0.1;
-				ultima_Vel_neg = velocidade_neg;
-				
+								
 				direcao = 1;
 				ande++;
 				if (ande > 2) ande = 0;
@@ -505,11 +487,17 @@ int main(void){
 	free(inimigos);
 	free(*R);
 	free(*M);
-	closegraph();	 
-	return 0;
+}
+
+int main(void){		
+
+	Larg = 640;
+	Alt = 480;
+	initwindow(Larg, Alt,"Rise");
 	
+	fasejogo();
 	
-	
-	
+	closegraph();
+  	return(0);
 }
 
