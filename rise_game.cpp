@@ -161,7 +161,7 @@ void defineFundo(int Num_Quad,int x, int y, int largura, int altura){
 	colisao_chao[Num_Quad].altura = colisao_chao[Num_Quad].altura - altura;
 }
 
-void fasejogo(){
+void fase1jogo(){
 	char tecla = 0;
 	//_____________________________________ Definições de images
 	int tam,ande = 0;
@@ -491,11 +491,11 @@ void fasejogo(){
 
 int main(void){		
 
-	Larg = 640;
+	Larg = 720;
 	Alt = 480;
 	initwindow(Larg, Alt,"Rise");
 	
-	fasejogo();
+	fase1jogo();
 	
 	closegraph();
   	return(0);
