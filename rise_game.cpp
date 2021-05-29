@@ -197,13 +197,6 @@ void fase1jogo(){
 	int cinzaArdosia[3] = {119,136,153};
 	int escarlate[3] = {255,36,0};
 	
-	printf("Participantes: \n\n");
-	printf("  Ednei Sell dos Santos Junior  \n");
-	printf("  Luciano de Carvalho Lima  \n");
-	printf("  Marcelo Kazuaki Shimada  \n");
-	printf("  Matheus Ferrandes de Mayo Gomes Beato  \n");
-	printf("  Thiago Oliveira Monte Alves de Araujo  \n\n");
-	
 //_______________________________________________________________ Tratamento de imagens
 	//Imagem de tamanho 117 por 208
 	tam = imagesize(0,0,44, 27);
@@ -475,6 +468,7 @@ void fase1jogo(){
 			
 			gt2 = GetTickCount();
 			
+			printf("%d",inicio);		
 			fflush(stdin);
 			if (kbhit())
 				tecla = getch();
@@ -489,12 +483,45 @@ void fase1jogo(){
 	free(*M);
 }
 
-int main(void){		
+bool GlbEditFase = false;
+void gravaFase(int fase){
+	
+	FILE *arq;
+	char atual[7];
+	int MouseClicado;
+	bool sair = true;
+	POINT P; // variável que irá conter as coordenadas X, Y do ponto onde o mouse foi clicado
+	
+	MouseClicado = false;
+	
+	sprintf(atual,"fase_%d",fase);
+	//if (GetKeyState(VK_SHIFT)&0x80 && GetKeyState(0x58)&0x80) GlbEditFase = !GlbEditFase;
+	arq = fopen(atual,"r");
+	
+	while(sair){
+		if ((GetKeyState(VK_SHIFT)&0x80) && (GetKeyState(0x58)&0x80)) sair = !sair; // 0x58 = tecla X
+		printf("%d",sair);
+	}
+	
+	
+	
+	fclose(arq);
+}
 
+int main(void){		
+		
+	printf("Participantes: \n\n");
+	printf("  Ednei Sell dos Santos Junior  \n");
+	printf("  Luciano de Carvalho Lima  \n");
+	printf("  Marcelo Kazuaki Shimada  \n");
+	printf("  Matheus Ferrandes de Mayo Gomes Beato  \n");
+	printf("  Thiago Oliveira Monte Alves de Araujo  \n\n");
+	
 	Larg = 720;
 	Alt = 480;
 	initwindow(Larg, Alt,"Rise");
 	
+	gravaFase(1);
 	fase1jogo();
 	
 	closegraph();
