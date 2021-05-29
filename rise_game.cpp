@@ -18,11 +18,6 @@ Thiago Oliveira Monte Alves de Araujo
 
 int Larg, Alt; // Variáveis de largura e altura da tela
 
-void quadrado(int Ponto_X1, int Ponto_Y1, int Ponto_X2, int Ponto_Y2, int cor[]){
-	setcolor(RGB(cor[0],cor[1],cor[2]));
-	rectangle(Ponto_X1,Ponto_Y1,Ponto_X2,Ponto_Y2);
-}
-
 void barra(int Ponto_X1, int Ponto_Y1, int Ponto_X2, int Ponto_Y2, int cor[]){
 	setcolor(RGB(cor[0],cor[1],cor[2]));
 	setfillstyle(1,RGB(cor[0],cor[1],cor[2]));
@@ -34,25 +29,10 @@ void linha(int Ponto_X1, int Ponto_Y1, int Ponto_X2, int Ponto_Y2, int cor[]){
 	line(Ponto_X1,Ponto_Y1,Ponto_X2,Ponto_Y2);
 }
 
-void circulo(int Ponto_X, int Ponto_Y, int Tamanho, int cor[]){
-	setcolor(RGB(cor[0],cor[1],cor[2]));
-	circle(Ponto_X,Ponto_Y,Tamanho);
-}
-
 void elipse(int Ponto_X, int Ponto_Y, int Tamanho_X, int Tamanho_Y, int cor[]){
 	setcolor(RGB(cor[0],cor[1],cor[2]));
 	setfillstyle(1,RGB(cor[0],cor[1],cor[2]));
 	fillellipse(Ponto_X,Ponto_Y,Tamanho_X,Tamanho_Y);
-}
-
-void poligono(int qtd_pontos, int pontos [], int cor[]){ 
-	setcolor(RGB(cor[0],cor[1],cor[2]));
-	setfillstyle(1,RGB(cor[0],cor[1],cor[2]));
-	fillpoly(qtd_pontos, pontos);
-}
-
-void ponto(int Ponto_X, int Ponto_Y, int cor[]){
-	putpixel(Ponto_X,Ponto_Y,RGB(cor[0],cor[1],cor[2]));
 }
 
 void fundo(int inicio, int Larg, int Alt, int i, int X){
