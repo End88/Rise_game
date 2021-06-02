@@ -469,13 +469,152 @@ void fase1jogo(){
 	free(*M);
 }
 
+# define efeito 11
+void TelaInicial(){
+	char tecla = 0;
+	unsigned long long gt1, gt2;
+	int FPS;
+	int pg = 1; // Váriavel de pagina 
+	int tam,tamBg,tamE, i, cont = 4;
+	int C_on = 0, S_on = 0;
+	unsigned char *R[2], *M[2], *S[2], *MS[2], *Bg[2], *E[efeito];
+	
+	tamE = imagesize(0,0,719, 479);
+	for(i = 0; i < efeito; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+		E[i] = (unsigned char *)malloc(tamE);
+	}
+	
+	tam = imagesize(0,0,268, 83);
+	for(i = 0; i < 2; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+		R[i] = (unsigned char *)malloc(tam);
+		M[i] = (unsigned char *)malloc(tam);
+		S[i] = (unsigned char *)malloc(tam);
+		MS[i] = (unsigned char *)malloc(tam);
+	}
+	
+	tamBg = imagesize(0,0,719, 479);
+	for(i = 0; i < 2; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+		Bg[i] = (unsigned char *)malloc(tamBg);
+	}
+
+	readimagefile(".\\images\\efeitos\\Efeito.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[0]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito1.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[1]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito2.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[2]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito3.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[3]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito4.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[4]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito5.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[5]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito6.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[6]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito7.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[7]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito8.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[8]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito9.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[9]); // captura para o ponteiro R
+	readimagefile(".\\images\\efeitos\\Efeito10.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, E[10]); // captura para o ponteiro R
+//	readimagefile(".\\images\\efeitos\\Efeito11.bmp", 0, 0, 719, 479);
+//	getimage(0, 0, 719, 479, E[11]); // captura para o ponteiro R
+		
+	readimagefile(".\\images\\bg_4.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, Bg[0]); // captura para o ponteiro R
+
+	readimagefile(".\\images\\bg_3.bmp", 0, 0, 719, 479);
+	getimage(0, 0, 719, 479, Bg[1]); // captura para o ponteiro R		
+		
+	readimagefile(".\\images\\comecar_on_2.bmp", 0, 0, 268, 83);
+	getimage(0, 0, 268, 83, R[1]); // captura para o ponteiro R
+	getimage(0, 0, 268, 83, M[1]); // captura para o ponteiro M
+	
+	readimagefile(".\\images\\sair_on_2.bmp", 0, 0, 268, 83);
+	getimage(0, 0, 268, 83, S[1]); // captura para o ponteiro R
+	getimage(0, 0, 268, 83, MS[1]); // captura para o ponteiro M
+	
+	readimagefile(".\\images\\comecar_off.bmp", 0, 0, 268, 83);
+	getimage(0, 0, 268, 83, R[0]); // captura para o ponteiro R
+	getimage(0, 0, 268, 83, M[0]); // captura para o ponteiro M
+	
+	readimagefile(".\\images\\sair_off.bmp", 0, 0, 268, 83);
+	getimage(0, 0, 268, 83, S[0]); // captura para o ponteiro R
+	getimage(0, 0, 268, 83, MS[0]); // captura para o ponteiro M
+	
+	for(i = 0; i < 2; i++){
+	PreparaImg(tam, R[i], M[i]); // configura as cores branca e preta em cada pixel para formar o recorte
+	PreparaImg(tam, S[i], MS[i]); // configura as cores branca e preta em cada pixel para formar o recorte
+	}
+	
+	FPS = 60;
+	gt1 = GetTickCount();
+	gt2 = gt1 * 2;
+	
+	while (tecla != ESC){
+		
+		if (gt2 - gt1 > 1000/FPS){
+			gt1 = gt2;
+			
+			if (pg == 1) pg = 2; else pg = 1;
+			setactivepage(pg);
+			//________________
+			setbkcolor(RGB(150,150,150));
+			cleardevice();
+			
+			fundo(0,Larg,Alt,i,0);
+			
+			putimage(  0, 0, Bg[C_on], COPY_PUT);
+			putimage(  0, 0, E[cont], AND_PUT);
+			 
+			putimage(720/1.5-268/2, 480/2, M[C_on], AND_PUT);
+			putimage(720/1.5-268/2, 480/2, R[C_on], OR_PUT);
+			
+			putimage(720/1.5-268/2, 480/2+84, MS[S_on], AND_PUT);
+			putimage(720/1.5-268/2, 480/2+84, S[S_on], OR_PUT);											
+			
+			//________________
+			setvisualpage(pg);
+			
+			if (GetKeyState(VK_UP)&0x80){
+				C_on = 1;
+				S_on = 0;
+//				cont = efeito; // reinicia contador de efeito de 
+			}
+			if (GetKeyState(VK_DOWN)&0x80){
+				C_on = 0;
+				S_on = 1;
+				cont = efeito;
+			}
+			if (cont > 0){
+				cont = cont - 0.25;
+			}
+			if (GetKeyState(VK_RETURN)&0x80){
+				if (C_on == true) fase1jogo();
+				if (S_on == true) break;
+			}
+			
+			gt2 = GetTickCount();
+			
+			fflush(stdin);
+			if (kbhit()) tecla = getch();
+		}
+	}
+	free(*R);
+	free(*M);
+	free(*S);
+	free(*MS);
+}
+
 int main(void){		
 
 	Larg = 720;
 	Alt = 480;
 	initwindow(Larg, Alt,"Rise");
 	
-	fase1jogo();
+	TelaInicial();
 	
 	closegraph();
   	return(0);
