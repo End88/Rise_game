@@ -14,7 +14,6 @@ Thiago Oliveira Monte Alves de Araujo
 #include<time.h>
 
 #define ESC 27
-#define QtdePsg  3
 
 int Larg, Alt; // Variáveis de largura e altura da tela
 
@@ -141,13 +140,18 @@ void defineFundo(int Num_Quad,int x, int y, int largura, int altura){
 	colisao_chao[Num_Quad].altura = colisao_chao[Num_Quad].altura - altura;
 }
 
+#define QtdePsg  90
+#define SpritePr  137 // Sprite parado
+#define SpritePl  48 // Sprite Pulo
 void fase1jogo(){
 	char tecla = 0;
 	//_____________________________________ Definições de images
 	int tam,ande = 0;
-	unsigned char *R[QtdePsg], *M[QtdePsg], *FlipR[QtdePsg], *FlipM[QtdePsg];	
+	unsigned char *R[QtdePsg], *M[QtdePsg], *FlipR[QtdePsg], *FlipM[QtdePsg]; // Imagens de movimento
+	unsigned char *St[SpritePr], *MSt[SpritePr], *FlipSt[SpritePr],*FlipMSt[SpritePr]; // Imagens parado
+	unsigned char *Jp[SpritePl], *MJp[SpritePl], *FlipJp[SpritePl],*FlipMJp[SpritePl]; // Imagens pulando
 	
-	TQUADRADO *inimigos, psg;
+	TQUADRADO *inimigos, psg, draw;
 	int Qtde_chao, Qtde_inimigos;
 	int passo_inimigos = 5, andando = 0;
 	bool morte = false;
@@ -161,10 +165,14 @@ void fase1jogo(){
 	double altitude = 0.0;
 	
 	int i,X,cont; // Variáveis i, X e cont armezenam informações dinámicas.
+	int imgcont;
+	double refP;
 	double inicio = 0; // Váriável Início define o início da tela
 	int pg = 1; // Váriavel de pagina 
-	int Passo_X,Passo_Y; // Variável do raio e passo das esferas móveis
-	bool chao = true,Pulo = false;
+	double Passo_X,Passo_Y; // Variável do raio e passo das esferas móveis
+	int stoped = 0, pulando = 0;
+	bool chao = true,Pulo = false, animation = false;
+	bool moved = false;
 	bool inercia_Right = false, inercia_Left = false;
 	
 	unsigned long long gt1, gt2;
@@ -184,9 +192,11 @@ void fase1jogo(){
 	printf("  Matheus Ferrandes de Mayo Gomes Beato  \n");
 	printf("  Thiago Oliveira Monte Alves de Araujo  \n\n");
 	
-//_______________________________________________________________ Tratamento de imagens
-	//Imagem de tamanho 117 por 208
-	tam = imagesize(0,0,44, 27);
+	setbkcolor(RGB(0,0,0));
+	cleardevice();
+//_______________________________________________________________ Tratamento de imagens de movimento
+	//Imagem de tamanho 128 por 128
+	tam = imagesize(0,0,127, 127);
 	for(i = 0; i < QtdePsg; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		R[i] = (unsigned char *)malloc(tam);
 		M[i] = (unsigned char *)malloc(tam);
@@ -194,24 +204,549 @@ void fase1jogo(){
 		FlipM[i] = (unsigned char *)malloc(tam);
 	} 	
 
-	readimagefile(".\\images\\move_1.bmp", 0, 0, 44, 27);
-	getimage(0, 0, 44, 27, R[0]); // captura para o ponteiro R
-	getimage(0, 0, 44, 27, M[0]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
-	getimage(0, 0, 44, 27, FlipR[0]); // captura para o ponteiro R
-	getimage(0, 0, 44, 27, FlipM[0]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
-	
-	readimagefile(".\\images\\move_2.bmp", 0, 0, 44, 27);
-	getimage(0, 0, 44, 27, R[1]); // captura para o ponteiro R
-	getimage(0, 0, 44, 27, M[1]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
-	getimage(0, 0, 44, 27, FlipR[1]); // captura para o ponteiro R
-	getimage(0, 0, 44, 27, FlipM[1]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
-	
-	readimagefile(".\\images\\move_3.bmp", 0, 0, 44, 27);
-	getimage(0, 0, 44, 27, R[2]); // captura para o ponteiro R
-	getimage(0, 0, 44, 27, M[2]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
-	getimage(0, 0, 44, 27, FlipR[2]); // captura para o ponteiro R
-	getimage(0, 0, 44, 27, FlipM[2]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
-	
+
+	if(true){
+	imgcont = 0;
+		readimagefile(".\\images\\correndo\\Run00.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run01.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run02.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run03.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run04.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run05.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run06.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run07.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run08.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run09.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run10.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run11.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run12.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run13.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run14.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run15.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run16.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run17.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run18.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run19.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run20.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run21.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run22.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run23.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run24.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run25.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run26.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run27.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run28.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run29.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run30.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run31.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run32.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run33.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run34.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run35.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run36.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run37.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run38.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run39.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run40.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run41.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run42.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run43.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run44.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run45.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run46.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run47.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run48.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run49.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run50.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run51.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run52.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run53.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run54.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run55.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run56.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run57.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run58.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run59.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run60.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run61.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run62.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run63.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run64.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run65.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run66.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run67.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run68.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run69.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run70.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run71.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run72.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run73.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run74.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run75.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run76.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run77.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run78.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run79.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run80.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\correndo\\Run81.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run82.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run83.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run84.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run85.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run86.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run87.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run88.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\correndo\\Run89.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, R[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, M[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro R
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+}
 
 	for(i = 0; i < QtdePsg; i++){
 		PreparaImg(tam, R[i], M[i]); // configura as cores branca e preta em cada pixel para formar o recorte
@@ -219,13 +754,1184 @@ void fase1jogo(){
 	
 	
 	for (i = 0; i < QtdePsg; i++){
-		FlipImg(45,28,FlipR[i]);
-		FlipImg(45,28,FlipM[i]);
+		FlipImg(128,128,FlipR[i]);
+		FlipImg(128,128,FlipM[i]);
+	}
+	
+	//_______________________________________________________________ Tratamento de imagens de psg parado
+	//Imagem de tamanho 128 por 128
+
+	for(i = 0; i < SpritePr; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+		St[i] = (unsigned char *)malloc(tam);
+		MSt[i] = (unsigned char *)malloc(tam);
+		FlipSt[i] = (unsigned char *)malloc(tam);
+		FlipMSt[i] = (unsigned char *)malloc(tam);
+	} 
+
+
+	if(true){
+	imgcont = 0;
+		
+		readimagefile(".\\images\\parado\\Idle000.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle001.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle002.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle003.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle004.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle005.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle006.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle007.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle008.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle009.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle010.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipR[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle011.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle012.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle013.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle014.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle015.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle016.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle017.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle018.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle019.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle020.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\parado\\Idle021.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle022.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle023.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle024.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle025.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle026.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle027.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle028.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle029.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle030.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\parado\\Idle031.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle032.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle033.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle034.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle035.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle036.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle037.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle038.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle039.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle040.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\parado\\Idle041.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle042.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle043.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle044.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle045.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle046.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle047.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle048.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle049.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle050.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\parado\\Idle051.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle052.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle053.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle054.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle055.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle056.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle057.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle058.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle059.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipM[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle060.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\parado\\Idle061.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle062.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle063.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle064.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle065.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle066.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle067.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle068.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle069.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle070.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\parado\\Idle071.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle072.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle073.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle074.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle075.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle076.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle077.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle078.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle079.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle080.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\parado\\Idle081.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle082.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle083.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle084.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle085.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle086.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle087.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle088.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle089.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle090.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\parado\\Idle091.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle092.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle093.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle094.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle095.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle096.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle097.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle098.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle099.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle100.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;	
+		readimagefile(".\\images\\parado\\Idle101.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle102.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle103.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle104.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle105.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle106.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle107.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle108.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle109.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle110.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle111.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle112.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle113.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle114.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle115.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle116.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle117.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle118.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle119.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle120.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle121.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle122.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle123.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle124.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle125.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle126.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle127.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle128.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle129.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle130.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle131.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle132.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle133.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle134.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle135.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\parado\\Idle136.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, St[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipSt[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMSt[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		
+	}
+
+	for(i = 0; i < SpritePr; i++){
+		PreparaImg(tam, St[i], MSt[i]); // configura as cores branca e preta em cada pixel para formar o recorte
+		PreparaImg(tam, FlipSt[i], FlipMSt[i]);} // configura as cores branca e preta em cada pixel para formar o recorte
+	
+	
+	for (i = 0; i < SpritePr; i++){
+		FlipImg(128,128,FlipSt[i]);
+		FlipImg(128,128,FlipMSt[i]);
+	}
+	//_______________________________________________________________ Tratamento de imagens de psg parado
+	//Imagem de tamanho 128 por 128
+
+	for(i = 0; i < SpritePl; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+		Jp[i] = (unsigned char *)malloc(tam);
+		MJp[i] = (unsigned char *)malloc(tam);
+		FlipJp[i] = (unsigned char *)malloc(tam);
+		FlipMJp[i] = (unsigned char *)malloc(tam);
+	} 
+
+
+	if(true){
+	imgcont = 0;
+	
+	
+		readimagefile(".\\images\\pulando\\Jump00.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump01.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump02.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump03.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump04.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump05.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump06.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump07.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump08.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump09.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump10.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump11.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump12.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump13.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump14.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump15.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump16.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump17.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump18.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump19.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump20.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump21.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump22.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump23.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump24.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump25.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump26.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump27.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump28.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump29.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump30.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump31.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump32.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump33.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump34.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump35.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump36.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump37.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump38.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump39.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump40.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump41.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump42.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump43.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump44.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump45.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump46.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	imgcont++;
+		readimagefile(".\\images\\pulando\\Jump47.bmp", 0, 0, 127, 127);
+	getimage(0, 0, 127, 127, Jp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, MJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+	getimage(0, 0, 127, 127, FlipJp[imgcont]); // captura para o ponteiro St
+	getimage(0, 0, 127, 127, FlipMJp[imgcont]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+
+	}
+
+	for(i = 0; i < SpritePl; i++){
+		PreparaImg(tam, Jp[i], MJp[i]); // configura as cores branca e preta em cada pixel para formar o recorte
+		PreparaImg(tam, FlipJp[i], FlipMJp[i]);} // configura as cores branca e preta em cada pixel para formar o recorte
+	
+	
+	for (i = 0; i < SpritePl; i++){
+		FlipImg(128,128,FlipJp[i]);
+		FlipImg(128,128,FlipMJp[i]);
 	}
 //_______________________________________________________________ 
 	
-	altura_psg = 28;
-	largura_psg = 40;
+	altura_psg = 128;
+	largura_psg = 128;
+		
+	draw.x = Larg/2-(largura_psg/2);
+	draw.y = Alt-altura_psg-50; 
+	draw.largura = psg.x + largura_psg;
+	draw.altura = psg.y + altura_psg;
+	
+	altura_psg = 89;
+	largura_psg = 70;
 		
 	psg.x = Larg/2-(largura_psg/2);
 	psg.y = Alt-altura_psg-50; 
@@ -233,7 +1939,7 @@ void fase1jogo(){
 	psg.altura = psg.y + altura_psg;
 	
 	Passo_X = 4;
-	Passo_Y = 1;
+	Passo_Y = 0.75;
 	
 	Qtde_chao = 9;
 	colisao_chao = (TQUADRADO*)malloc(sizeof(TQUADRADO)*Qtde_chao);
@@ -261,13 +1967,11 @@ void fase1jogo(){
 			
 			defineFundo(0,-Larg,50,0,0);
 			defineFundo(1,100,80,400,40);
-			defineFundo(2,-Larg/2+50,80,-Larg/2+70,40);
-			defineFundo(3,500,110,700,100);
-			defineFundo(4,750,150,800,145);
-			defineFundo(5,650,235,695,230);
-			defineFundo(6,800,290,900,285);
-			defineFundo(7,1000,340,1500,335);
-			defineFundo(8,-Larg/2-100,150,-Larg/2-50,140);
+			defineFundo(2,500,110,700,100);
+			defineFundo(3,750,150,800,145);
+			defineFundo(4,650,235,695,230);
+			defineFundo(5,800,290,900,285);
+			defineFundo(6,1000,340,1500,335);
 			
 			//_________________________________________ Desenho dos inimigos
 			inimigos[0].x = inicio+Larg+1200+andando;
@@ -282,17 +1986,33 @@ void fase1jogo(){
 			cleardevice();	
 			fundo(inicio,Larg,Alt,i,X);
 			
-//			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);
+			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);   // verificador de colisão do personagem
 			
 			switch(direcao){
-				case 1: 
-					putimage(psg.x, psg.y, M[ande], AND_PUT);
-    				putimage(psg.x, psg.y, R[ande], OR_PUT);					
+				case 1: // personagem andando para a direita		
+					putimage(psg.x-29, psg.y-29, M[ande], AND_PUT);
+    				putimage(psg.x-29, psg.y-29, R[ande], OR_PUT);					
 					break;
 				
-				case 2: 
-					putimage(psg.x, psg.y, FlipM[ande], AND_PUT);
-    				putimage(psg.x, psg.y, FlipR[ande], OR_PUT);					
+				case 2: // personagem andando para a esquerda
+					putimage(psg.x-29, psg.y-29, FlipM[ande], AND_PUT);
+    				putimage(psg.x-29, psg.y-29, FlipR[ande], OR_PUT);					
+					break;
+				case 3: // personagem parado para a direita
+					putimage(psg.x-29, psg.y-29, MSt[stoped], AND_PUT);
+    				putimage(psg.x-29, psg.y-29, St[stoped], OR_PUT);					
+					break;
+				case 4: // personagem parado para a esquerda
+					putimage(psg.x-29, psg.y-29, FlipMSt[stoped], AND_PUT);
+    				putimage(psg.x-29, psg.y-29, FlipSt[stoped], OR_PUT);					
+					break;
+				case 5: // personagem pulando para a direita
+					putimage(psg.x-29, psg.y-29, MJp[pulando], AND_PUT);
+    				putimage(psg.x-29, psg.y-29, Jp[pulando], OR_PUT);					
+					break;
+				case 6: // personagem pulando para a esquerda
+					putimage(psg.x-29, psg.y-29, FlipMJp[pulando], AND_PUT);
+    				putimage(psg.x-29, psg.y-29, FlipJp[pulando], OR_PUT);					
 					break;
 				
 			}
@@ -333,7 +2053,7 @@ void fase1jogo(){
 			
 	//_________________________________________________________ Andar para esquerda e direita da tela		
 			
-			if (GetKeyState(VK_LEFT)&0x80) {
+			if (GetKeyState(VK_LEFT)&0x80 && !(GetKeyState(VK_RIGHT)&0x80)) {
 				if (velocidade_pos < 1) velocidade_pos = 1;				
 				inicio = inicio + (5*velocidade_pos);
 				
@@ -342,14 +2062,21 @@ void fase1jogo(){
 						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
 					}
 				}
-												
-				direcao = 2;
-				ande++;
-				if (ande > 2) ande = 0;
+				
+				moved = true;					
+				if (pulando == 0) direcao = 2;
+				if (ande != QtdePsg-1) ande += 2;
+				if (ande > QtdePsg-1) ande = QtdePsg-1;
+				else if (ande == QtdePsg-1) ande = 0;
 					
 			}else if (velocidade_pos > 0){
-				if (Pulo == false){
+				if (Pulo == false && animation == false){
 					inicio = inicio + (5*velocidade_pos);
+					
+					moved = false;
+					if (ande != QtdePsg-1) ande += 2;
+					if (ande > QtdePsg-1) ande = QtdePsg-1;
+					else if (ande == QtdePsg-1) ande = 0;
 					
 					for (i = 0; i < Qtde_chao; i++){
 						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
@@ -360,7 +2087,7 @@ void fase1jogo(){
 				velocidade_pos -= 0.5;
 			}
 			
-			if (GetKeyState(VK_RIGHT)&0x80) {
+			if (GetKeyState(VK_RIGHT)&0x80 && !(GetKeyState(VK_LEFT)&0x80)) {
 				if (velocidade_neg < 1) velocidade_neg = 1;
 				inicio = inicio - (5*velocidade_neg);		
 				
@@ -370,14 +2097,21 @@ void fase1jogo(){
 						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
 					}
 				}
-								
-				direcao = 1;
-				ande++;
-				if (ande > 2) ande = 0;
+				
+				moved = true;				
+				if (pulando == 0) direcao = 1;
+				if (ande != QtdePsg-1) ande += 2;
+				if (ande > QtdePsg-1) ande = QtdePsg-1;
+				else if (ande == QtdePsg-1) ande = 0;
 	
 			}else if(velocidade_neg > 0) {
-				if (Pulo == false){
+				if (Pulo == false && animation == false){
 					inicio = inicio - (5*velocidade_neg);	
+					
+					moved = false;
+					if (ande != QtdePsg-1) ande += 2;
+					if (ande > QtdePsg-1) ande = QtdePsg-1;
+					else if (ande == QtdePsg-1) ande = 0;
 						
 					for (i = 0; i < Qtde_chao; i++){
 						if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
@@ -387,40 +2121,79 @@ void fase1jogo(){
 				}
 				velocidade_neg -= 0.5;
 			}
-					
 			
+			if (moved == false){
+				if(direcao == 1) direcao = 3;
+				else if(direcao == 2) direcao = 4;
+				
+				stoped++;
+				if (stoped > SpritePr-1) stoped = 0;
+			}
+						
 			if (velocidade_pos == 1) velocidade = velocidade_neg;
 			else velocidade = velocidade_pos;
 	//________________________________________________________________________
 			if (GetKeyState(VK_UP)&0x80){
-				if (Pulo == false && tempo == 1 && chao == true) Pulo = true;
+				if (Pulo == false && tempo == 1 && chao == true && animation == false) Pulo = true;
 			}
 			
-			if (Pulo == true){		
-				psg.y = psg.y - Passo_Y-15-(velocidade);
-				psg.altura = psg.altura - Passo_Y-15-(velocidade);
+			if (Pulo == true){
 				
-				for (i = 0; i < Qtde_chao; i++){
-					if (psg.x <= colisao_chao[i].largura && psg.largura >= colisao_chao[i].x){
-						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y){
-						psg.y = colisao_chao[i].altura;
-						psg.altura = psg.y + altura_psg; 
-						tempo = 0;
-						Pulo = false;
-						break;	
-						} 	
+				if(direcao == 1 || direcao == 3) direcao = 5;
+				else if(direcao == 2 || direcao == 4) direcao = 6;
+				animation = true;
+				
+				if (pulando < 17)pulando += 2;
+				if (pulando > 17 && ((Passo_Y*(tempo*multiplicador)) < -(Passo_Y-15-(velocidade)))) pulando = 18;
+				if (pulando > SpritePl-1) pulando = 0;
+				if (pulando >11){
+					
+					
+					psg.y = psg.y - Passo_Y-15-(velocidade);
+					psg.altura = psg.altura - Passo_Y-15-(velocidade);
+									
+					for (i = 0; i < Qtde_chao; i++){
+						if (psg.x <= colisao_chao[i].largura && psg.largura >= colisao_chao[i].x){
+							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y){
+							psg.y = colisao_chao[i].altura;
+							psg.altura = psg.y + altura_psg; 
+							tempo = 0;
+							Pulo = false;
+							break;	
+							} 	
+						}
 					}
-				}
-				
-				tempo++;
+					
+					tempo++;
+				}		
 			}
+			
 			
 			if (chao == false){
 				if (tempo == 1) multiplicador = 5.0;
 				else multiplicador = 1.5;
 				psg.y = psg.y + (Passo_Y*(tempo*multiplicador)); // constantemente puxa para baixo, com valor menor crescente, até superar o valor do pulo
 				psg.altura = psg.altura + (Passo_Y*(tempo*multiplicador));
+				
+				if(direcao == 1 || direcao == 3) direcao = 5;
+				else if(direcao == 2 || direcao == 4) direcao = 6;
+				
+				if (Pulo == false){
+					pulando = 19;
+				}
+				
+				if ((Passo_Y*(tempo*multiplicador)) > -(Passo_Y-15-(velocidade))){
+					if (pulando < 19) pulando = 19;
+					else if (pulando < 44){
+						 pulando += 0.125;	
+					}	
+				}
+			}else if (pulando > 18 && (direcao == 5 || direcao == 6)){
+				pulando += 2;
+				animation = true;
 			}
+			if (pulando == SpritePl-1) {pulando = 0; animation = false;}
+			printf("%d\n\n",animation);
 						
 			for (i = 0; i < Qtde_chao; i++){
 				if (psg.x <= colisao_chao[i].largura && psg.largura >= colisao_chao[i].x){
@@ -443,11 +2216,11 @@ void fase1jogo(){
 			inercia_Left = false;
 			} 
 			
-			if (inicio < -150) {
-				if (psg.y <= Alt/2) altitude -= 2.0;
-				else if (psg.y <= Alt-Alt/4) altitude -= 1.0;
-				else altitude -= 0.5;
-			}
+//			if (inicio < -150) {
+//				if (psg.y <= Alt/2) altitude -= 2.0;
+//				else if (psg.y <= Alt-Alt/4) altitude -= 1.0;
+//				else altitude -= 0.5;
+//			}
 			
 			if (psg.altura >= Alt-25) break; //End game por queda
 			
@@ -478,7 +2251,7 @@ void TelaInicial(){
 	int tam,tamBg,tamE, i, cont = 4;
 	int C_on = 0, S_on = 0;
 	unsigned char *R[2], *M[2], *S[2], *MS[2], *Bg[2], *E[efeito];
-	
+		
 	tamE = imagesize(0,0,719, 479);
 	for(i = 0; i < efeito; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		E[i] = (unsigned char *)malloc(tamE);
@@ -615,6 +2388,7 @@ int main(void){
 	initwindow(Larg, Alt,"Rise");
 	
 	TelaInicial();
+	//fase1jogo();
 	
 	closegraph();
   	return(0);
