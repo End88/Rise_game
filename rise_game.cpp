@@ -143,6 +143,9 @@ void defineFundo(int Num_Quad,int x, int y, int largura, int altura){
 #define QtdePsg  90
 #define SpritePr  137 // Sprite parado
 #define SpritePl  48 // Sprite Pulo
+#define QtdeBg 67
+
+
 void fase1jogo(){
 	char tecla = 0;
 	//_____________________________________ Definições de images
@@ -151,6 +154,8 @@ void fase1jogo(){
 	unsigned char *St[SpritePr], *MSt[SpritePr], *FlipSt[SpritePr],*FlipMSt[SpritePr]; // Imagens parado
 	unsigned char *Jp[SpritePl], *MJp[SpritePl], *FlipJp[SpritePl],*FlipMJp[SpritePl]; // Imagens pulando
 	
+	unsigned char *Bg[QtdeBg];
+	
 	TQUADRADO *inimigos, psg, draw;
 	int Qtde_chao, Qtde_inimigos;
 	int passo_inimigos = 5, andando = 0;
@@ -158,16 +163,17 @@ void fase1jogo(){
 	
 	int direcao = 1;
 	int tempo = 1;
-	double velocidade_pos = 1.0, velocidade_neg = 1.0, velocidade, Velocidade_Max = 1.5;
+	double velocidade_pos = 1.0, velocidade_neg = 1.0, velocidade, Velocidade_Max = 3.0;
 	double multiplicador;	
 	
 	int altura_psg, largura_psg;
+	double Altdesenho = 29;
 	double altitude = 0.0;
 	
 	int i,X,cont; // Variáveis i, X e cont armezenam informações dinámicas.
 	int imgcont;
-	double refP;
 	double inicio = 0; // Váriável Início define o início da tela
+	int colum, pilar;
 	int pg = 1; // Váriavel de pagina 
 	double Passo_X,Passo_Y; // Variável do raio e passo das esferas móveis
 	int stoped = 0, pulando = 0;
@@ -194,6 +200,8 @@ void fase1jogo(){
 	
 	setbkcolor(RGB(0,0,0));
 	cleardevice();
+	if(true){ // facilitador para minimizar carregamento de imagens para personagem
+	
 //_______________________________________________________________ Tratamento de imagens de movimento
 	//Imagem de tamanho 128 por 128
 	tam = imagesize(0,0,127, 127);
@@ -290,15 +298,49 @@ void fase1jogo(){
 		FlipImg(128,128,FlipJp[i]);
 		FlipImg(128,128,FlipMJp[i]);
 	}
-//_______________________________________________________________ 
+}
+
+//________________________________________________________________ Inserção de background em layer 1
+	tam = imagesize(0,0,329, 329);
+	for(i = 0; i < QtdeBg; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+		Bg[i] = (unsigned char *)malloc(tam);
+	}
 	
-	altura_psg = 128;
-	largura_psg = 128;
+	char ImgFile[35];
+	for (i = 0; i < QtdeBg; i++){
+		sprintf(ImgFile,".\\images\\background\\Bg (%d).bmp",i);
 		
-	draw.x = Larg/2-(largura_psg/2);
-	draw.y = Alt-altura_psg-50; 
-	draw.largura = psg.x + largura_psg;
-	draw.altura = psg.y + altura_psg;
+		readimagefile(ImgFile, 0, 0, 329, 329);
+		getimage(0, 0, 329, 329, Bg[i]); // captura para o ponteiro R
+	}
+	free(ImgFile);
+	
+/*
+//________________________________________________________________ Inserção de background em layer 2 -> Rocha
+	
+	tam = imagesize(0,0,983,237);
+		Bg[1] = (unsigned char *)malloc(tam);
+		MBg[1] = (unsigned char *)malloc(tam);
+	
+		readimagefile(".\\images\\rock.bmp", 0, 0,983,237);
+		getimage(0, 0,983,237, Bg[1]); // captura para o ponteiro R
+		getimage(0, 0,983,237, Bg[1]); // captura para o ponteiro R
+
+		PreparaImg(tam, R[1], M[1]); // configura as cores branca e preta em cada pixel para formar o recorte
+		
+//________________________________________________________________ Inserção de background em layer 2 -> Rocha
+	
+	tam = imagesize(0,0,1443,390);
+		Bg[2] = (unsigned char *)malloc(tam);
+		MBg[2] = (unsigned char *)malloc(tam);
+	
+		readimagefile(".\\images\\cloud.bmp", 0, 0,1443,390);
+		getimage(0, 0,1443,390, Bg[2]); // captura para o ponteiro R
+		getimage(0, 0,1443,390, Bg[2]); // captura para o ponteiro R
+
+		PreparaImg(tam, R[2], M[2]); // configura as cores branca e preta em cada pixel para formar o recorte
+*/
+//_______________________________________________________________ 
 	
 	altura_psg = 89;
 	largura_psg = 70;
@@ -309,7 +351,7 @@ void fase1jogo(){
 	psg.altura = psg.y + altura_psg;
 	
 	Passo_X = 4;
-	Passo_Y = 0.75;
+	Passo_Y = 0.5;
 	
 	Qtde_chao = 9;
 	colisao_chao = (TQUADRADO*)malloc(sizeof(TQUADRADO)*Qtde_chao);
@@ -336,9 +378,9 @@ void fase1jogo(){
 			}
 			
 			defineFundo(0,-Larg,50,0,0);
-			defineFundo(1,100,80,400,40);
-			defineFundo(2,500,110,700,100);
-			defineFundo(3,750,150,800,145);
+			defineFundo(1,-Larg/2+200,100,50,90);
+			defineFundo(2,-Larg/2+50,150,-Larg/2+100,140);
+			defineFundo(3,-Larg/2+200,250,50,240);
 			defineFundo(4,650,235,695,230);
 			defineFundo(5,800,290,900,285);
 			defineFundo(6,1000,340,1500,335);
@@ -356,33 +398,45 @@ void fase1jogo(){
 			cleardevice();	
 			fundo(inicio,Larg,Alt,i,X);
 			
-			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);   // verificador de colisão do personagem
+			pilar = 3960;
+			colum = 0;
+			for(i = QtdeBg-1; i >= 0; i--){
+				
+				if (colum+inicio-(Larg/2) <= Larg && Alt-pilar-altitude+330 >= 0) putimage(colum+inicio-(Larg/2), Alt-pilar-altitude, Bg[i], COPY_PUT); 
+				if (i%6 == 0){
+					colum = 0;
+					pilar -= 330;	
+				} 
+				colum += 330;	
+			}
+		
+			//barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);   // verificador de colisão do personagem
 			
 			switch(direcao){
 				case 1: // personagem andando para a direita		
-					putimage(psg.x-29, psg.y-29, M[ande], AND_PUT);
-    				putimage(psg.x-29, psg.y-29, R[ande], OR_PUT);					
+					putimage(psg.x-29, psg.y-Altdesenho, M[ande], AND_PUT);
+    				putimage(psg.x-29, psg.y-Altdesenho, R[ande], OR_PUT);					
 					break;
 				
 				case 2: // personagem andando para a esquerda
-					putimage(psg.x-29, psg.y-29, FlipM[ande], AND_PUT);
-    				putimage(psg.x-29, psg.y-29, FlipR[ande], OR_PUT);					
+					putimage(psg.x-29, psg.y-Altdesenho, FlipM[ande], AND_PUT);
+    				putimage(psg.x-29, psg.y-Altdesenho, FlipR[ande], OR_PUT);					
 					break;
 				case 3: // personagem parado para a direita
-					putimage(psg.x-29, psg.y-29, MSt[stoped], AND_PUT);
-    				putimage(psg.x-29, psg.y-29, St[stoped], OR_PUT);					
+					putimage(psg.x-29, psg.y-Altdesenho, MSt[stoped], AND_PUT);
+    				putimage(psg.x-29, psg.y-Altdesenho, St[stoped], OR_PUT);					
 					break;
 				case 4: // personagem parado para a esquerda
-					putimage(psg.x-29, psg.y-29, FlipMSt[stoped], AND_PUT);
-    				putimage(psg.x-29, psg.y-29, FlipSt[stoped], OR_PUT);					
+					putimage(psg.x-29, psg.y-Altdesenho, FlipMSt[stoped], AND_PUT);
+    				putimage(psg.x-29, psg.y-Altdesenho, FlipSt[stoped], OR_PUT);					
 					break;
 				case 5: // personagem pulando para a direita
-					putimage(psg.x-29, psg.y-29, MJp[pulando], AND_PUT);
-    				putimage(psg.x-29, psg.y-29, Jp[pulando], OR_PUT);					
+					putimage(psg.x-29, psg.y-Altdesenho, MJp[pulando], AND_PUT);
+    				putimage(psg.x-29, psg.y-Altdesenho, Jp[pulando], OR_PUT);					
 					break;
 				case 6: // personagem pulando para a esquerda
-					putimage(psg.x-29, psg.y-29, FlipMJp[pulando], AND_PUT);
-    				putimage(psg.x-29, psg.y-29, FlipJp[pulando], OR_PUT);					
+					putimage(psg.x-29, psg.y-Altdesenho, FlipMJp[pulando], AND_PUT);
+    				putimage(psg.x-29, psg.y-Altdesenho, FlipJp[pulando], OR_PUT);					
 					break;
 				
 			}
@@ -424,20 +478,24 @@ void fase1jogo(){
 	//_________________________________________________________ Andar para esquerda e direita da tela		
 			
 			if (GetKeyState(VK_LEFT)&0x80 && !(GetKeyState(VK_RIGHT)&0x80)) {
-				if (velocidade_pos < 1) velocidade_pos = 1;				
-				inicio = inicio + (5*velocidade_pos);
-				
-				for (i = 0; i < Qtde_chao; i++){
-					if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
-						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
+				if (-inicio > 0){
+					if (velocidade_pos < 1) velocidade_pos = 1;				
+					inicio = inicio + (5*velocidade_pos);
+					
+					for (i = 0; i < Qtde_chao; i++){
+						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
+							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
+						}
 					}
+					
+					moved = true;					
+					if (pulando == 0) direcao = 2;
+					if (ande != QtdePsg-1) ande += 2;
+					if (ande > QtdePsg-1) ande = QtdePsg-1;
+					else if (ande == QtdePsg-1) ande = 0;
 				}
 				
-				moved = true;					
-				if (pulando == 0) direcao = 2;
-				if (ande != QtdePsg-1) ande += 2;
-				if (ande > QtdePsg-1) ande = QtdePsg-1;
-				else if (ande == QtdePsg-1) ande = 0;
+
 					
 			}else if (velocidade_pos > 0){
 				if (Pulo == false && animation == false){
@@ -458,21 +516,25 @@ void fase1jogo(){
 			}
 			
 			if (GetKeyState(VK_RIGHT)&0x80 && !(GetKeyState(VK_LEFT)&0x80)) {
-				if (velocidade_neg < 1) velocidade_neg = 1;
-				inicio = inicio - (5*velocidade_neg);		
 				
-				
-				for (i = 0; i < Qtde_chao; i++){
-					if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
-						if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+				if (-inicio < 237 ||(altitude >= 1230 && -inicio < 1230)){
+					if (velocidade_neg < 1) velocidade_neg = 1;
+					inicio = inicio - (5*velocidade_neg);		
+					
+					
+					for (i = 0; i < Qtde_chao; i++){
+						if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
+							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+						}
 					}
+					
+					moved = true;				
+					if (pulando == 0) direcao = 1;
+					if (ande != QtdePsg-1) ande += 2;
+					if (ande > QtdePsg-1) ande = QtdePsg-1;
+					else if (ande == QtdePsg-1) ande = 0;					
 				}
-				
-				moved = true;				
-				if (pulando == 0) direcao = 1;
-				if (ande != QtdePsg-1) ande += 2;
-				if (ande > QtdePsg-1) ande = QtdePsg-1;
-				else if (ande == QtdePsg-1) ande = 0;
+
 	
 			}else if(velocidade_neg > 0) {
 				if (Pulo == false && animation == false){
@@ -499,7 +561,6 @@ void fase1jogo(){
 				stoped++;
 				if (stoped > SpritePr-1) stoped = 0;
 			}
-						
 			if (velocidade_pos == 1) velocidade = velocidade_neg;
 			else velocidade = velocidade_pos;
 	//________________________________________________________________________
@@ -521,6 +582,11 @@ void fase1jogo(){
 					
 					psg.y = psg.y - Passo_Y-15-(velocidade);
 					psg.altura = psg.altura - Passo_Y-15-(velocidade);
+//					psg.y -= 4;
+//					psg.altura -= 1;
+	
+					if (pulando <= 18 && Altdesenho > 2)Altdesenho -= 7;
+
 									
 					for (i = 0; i < Qtde_chao; i++){
 						if (psg.x <= colisao_chao[i].largura && psg.largura >= colisao_chao[i].x){
@@ -529,6 +595,7 @@ void fase1jogo(){
 							psg.altura = psg.y + altura_psg; 
 							tempo = 0;
 							Pulo = false;
+							
 							break;	
 							} 	
 						}
@@ -536,7 +603,7 @@ void fase1jogo(){
 					
 					tempo++;
 				}		
-			}
+			}else if(chao == true)Altdesenho = 29;
 			
 			
 			if (chao == false){
@@ -550,6 +617,7 @@ void fase1jogo(){
 				
 				if (Pulo == false){
 					pulando = 19;
+//					altitude -= 10.0;
 				}
 				
 				if ((Passo_Y*(tempo*multiplicador)) > -(Passo_Y-15-(velocidade))){
@@ -563,7 +631,6 @@ void fase1jogo(){
 				animation = true;
 			}
 			if (pulando == SpritePl-1) {pulando = 0; animation = false;}
-			printf("%d\n\n",animation);
 						
 			for (i = 0; i < Qtde_chao; i++){
 				if (psg.x <= colisao_chao[i].largura && psg.largura >= colisao_chao[i].x){
@@ -586,13 +653,16 @@ void fase1jogo(){
 			inercia_Left = false;
 			} 
 			
-//			if (inicio < -150) {
-//				if (psg.y <= Alt/2) altitude -= 2.0;
-//				else if (psg.y <= Alt-Alt/4) altitude -= 1.0;
-//				else altitude -= 0.5;
+			if (psg.y <= Alt/2 && chao == true) {
+				altitude -= Alt/3;
+				psg.y += Alt/3;
+				psg.altura += Alt/3;
+			}
+//			if (GetKeyState(VK_DOWN)&0x80) {
+//				altitude -= 10.0;
 //			}
 			
-			if (psg.altura >= Alt-25) break; //End game por queda
+//			if (psg.altura >= Alt-25) break; //End game por queda
 			
 			if (morte == true) break; //End game por encostar em inimigos
 			
