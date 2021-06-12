@@ -12,6 +12,7 @@ Thiago Oliveira Monte Alves de Araujo
 #include<stdio.h>
 #include<graphics.h>
 #include<time.h>
+#include <windows.h>
 
 #define ESC 27
 
@@ -171,7 +172,8 @@ void fase1jogo(){
 	double altitude = 0.0;
 	
 	int i,X,cont; // Variáveis i, X e cont armezenam informações dinámicas.
-	int imgcont;
+	int imgcont, volumcont = 0, passomusica = 1;
+	bool switchmusic = false;
 	double inicio = 0; // Váriável Início define o início da tela
 	int colum, pilar;
 	int pg = 1; // Váriavel de pagina 
@@ -180,6 +182,7 @@ void fase1jogo(){
 	bool chao = true,Pulo = false, animation = false;
 	bool moved = false;
 	bool inercia_Right = false, inercia_Left = false;
+	double z;
 	
 	unsigned long long gt1, gt2;
 	
@@ -190,30 +193,51 @@ void fase1jogo(){
 	int orquidea[3] = {186,85,211};
 	int cinzaArdosia[3] = {119,136,153};
 	int escarlate[3] = {255,36,0};
+	int volumes[16] = {0xFFFFFFFF,0xEEEEEEEE,0xDDDDDDDD,0xCCCCCCCC,0xBBBBBBBB,0xAAAAAAAA,0x99999999,0x88888888,0x77777777,0x66666666,0x55555555,0x44444444,
+				   0x33333333,0x22222222,0x11111111,0x00000000};
 	
-	printf("Participantes: \n\n");
-	printf("  Ednei Sell dos Santos Junior  \n");
-	printf("  Luciano de Carvalho Lima  \n");
-	printf("  Marcelo Kazuaki Shimada  \n");
-	printf("  Matheus Ferrandes de Mayo Gomes Beato  \n");
-	printf("  Thiago Oliveira Monte Alves de Araujo  \n\n");
-	
-	setbkcolor(RGB(0,0,0));
-	cleardevice();
-	if(true){ // facilitador para minimizar carregamento de imagens para personagem
+	int total = -1;
+	char load[5];
+	total++;
+	setactivepage(1);
+	setfillstyle(1, RGB(0, 0, 0));
+	bar(0,0,Larg,Alt);
+	setbkcolor(RGB(0, 0, 0));	
+	rectangle(100, Alt-50, Larg-100, Alt-40);
+	rectangle(100, Alt-30, Larg-100, Alt-20);
+	setfillstyle(1, RGB(190, 190, 255));
+	bar(100, Alt-30, 100+total*((Larg-200)/4), Alt-20);
+	setvisualpage(1);
+
+//________________________________________________________________ carregando as músicas do jogo
+	waveOutSetVolume(0,volumes[volumcont]); 
+	mciSendString("open .\\songs\\musica_inicio_do_jogo.mp3 type MPEGVideo alias Music1", NULL, 0, 0); 
+//	mciSendString("open .\\songs\\primeiro_efeito.mp3 type MPEGVideo alias Efect1", NULL, 0, 0); 
+	mciSendString("open .\\songs\\segunda_musica_do_jogo.mp3 type MPEGVideo alias Music2", NULL, 0, 0); 
+//	mciSendString("open .\\songs\\segundo_efeito.mp3 type MPEGVideo alias Efect2", NULL, 0, 0); 
+	mciSendString("open .\\songs\\terceira_musica_do_jogo.mp3 type MPEGVideo alias Music3", NULL, 0, 0);
+	mciSendString("open .\\songs\\musica_final_do_jogo.mp3 type MPEGVideo alias Ending", NULL, 0, 0);
+	mciSendString("play Music1 repeat", NULL, 0, 0);
+	double u = 5.84269663;
+	if(true){ // facilitador para minimizar total de imagens para personagem
 	
 //_______________________________________________________________ Tratamento de imagens de movimento
 	//Imagem de tamanho 128 por 128
 	tam = imagesize(0,0,127, 127);
 	for(i = 0; i < QtdePsg; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+		
 		R[i] = (unsigned char *)malloc(tam);
 		M[i] = (unsigned char *)malloc(tam);
 		FlipR[i] = (unsigned char *)malloc(tam);
 		FlipM[i] = (unsigned char *)malloc(tam);
+
 	} 	
 	
 	char ImgFile[35];
+	
 	for (i = 0; i < QtdePsg; i++){
+		z = i;
+		setactivepage(2);
 		if (i < 10) sprintf(ImgFile,".\\images\\correndo\\Run0%d.bmp",i);
 		else sprintf(ImgFile,".\\images\\correndo\\Run%d.bmp",i);
 
@@ -222,8 +246,12 @@ void fase1jogo(){
 		getimage(0, 0, 127, 127, M[i]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
 		getimage(0, 0, 127, 127, FlipR[i]); // captura para o ponteiro R
 		getimage(0, 0, 127, 127, FlipM[i]); // captura para a máscara M (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+		
+		setactivepage(1);
+		setfillstyle(1, RGB(190, 190, 255));
+		bar(100, Alt-50, 100+(i*u), Alt-40);
+		setvisualpage(1);
 	}
-	free(ImgFile);
 	for(i = 0; i < QtdePsg; i++){
 		PreparaImg(tam, R[i], M[i]); // configura as cores branca e preta em cada pixel para formar o recorte
 		PreparaImg(tam, FlipR[i], FlipM[i]);} // configura as cores branca e preta em cada pixel para formar o recorte
@@ -236,7 +264,17 @@ void fase1jogo(){
 	
 	//_______________________________________________________________ Tratamento de imagens de psg parado
 	//Imagem de tamanho 128 por 128
-
+	u = 3.82352941;
+		total++;
+	setactivepage(1);
+	setfillstyle(1, RGB(0, 0, 0));
+	bar(0,0,Larg,Alt);
+	setbkcolor(RGB(0, 0, 0));
+	rectangle(100, Alt-50, Larg-100, Alt-40);
+		rectangle(100, Alt-30, Larg-100, Alt-20);
+		setfillstyle(1, RGB(190, 190, 255));
+	bar(100, Alt-30, 100+total*((Larg-200)/4), Alt-20);
+	setvisualpage(1);
 	for(i = 0; i < SpritePr; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		St[i] = (unsigned char *)malloc(tam);
 		MSt[i] = (unsigned char *)malloc(tam);
@@ -246,6 +284,7 @@ void fase1jogo(){
 
 
 	for (i = 0; i < SpritePr; i++){
+		setactivepage(2);
 		if (i < 10) sprintf(ImgFile,".\\images\\parado\\Idle00%d.bmp",i);
 		else if (i < 100) sprintf(ImgFile,".\\images\\parado\\Idle0%d.bmp",i);
 		else sprintf(ImgFile,".\\images\\parado\\Idle%d.bmp",i);
@@ -255,8 +294,12 @@ void fase1jogo(){
 		getimage(0, 0, 127, 127, MSt[i]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
 		getimage(0, 0, 127, 127, FlipSt[i]); // captura para o ponteiro St
 		getimage(0, 0, 127, 127, FlipMSt[i]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+		
+		setactivepage(1);
+		setfillstyle(1, RGB(190, 190, 255));
+		bar(100, Alt-50, 100+(i*u), Alt-40);
+		setvisualpage(1);
 	}
-	free(ImgFile);
 
 	for(i = 0; i < SpritePr; i++){
 		PreparaImg(tam, St[i], MSt[i]); // configura as cores branca e preta em cada pixel para formar o recorte
@@ -269,15 +312,26 @@ void fase1jogo(){
 	}
 	//_______________________________________________________________ Tratamento de imagens pulando
 	//Imagem de tamanho 128 por 128
-
+	u = 11.0638297;
+		total++;
+	setactivepage(1);
+	setfillstyle(1, RGB(0, 0, 0));
+	bar(0,0,Larg,Alt);
+	setbkcolor(RGB(0, 0, 0));
+	rectangle(100, Alt-50, Larg-100, Alt-40);
+		rectangle(100, Alt-30, Larg-100, Alt-20);
+		setfillstyle(1, RGB(190, 190, 255));
+	bar(100, Alt-30, 100+total*((Larg-200)/4), Alt-20);
+	setvisualpage(1);
 	for(i = 0; i < SpritePl; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		Jp[i] = (unsigned char *)malloc(tam);
 		MJp[i] = (unsigned char *)malloc(tam);
 		FlipJp[i] = (unsigned char *)malloc(tam);
 		FlipMJp[i] = (unsigned char *)malloc(tam);
 	} 
-
+	
 	for (i = 0; i < SpritePl; i++){
+		setactivepage(2);
 		if (i < 10) sprintf(ImgFile,".\\images\\pulando\\Jump0%d.bmp",i);
 		else sprintf(ImgFile,".\\images\\pulando\\Jump%d.bmp",i);
 
@@ -286,8 +340,12 @@ void fase1jogo(){
 		getimage(0, 0, 127, 127, MJp[i]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
 		getimage(0, 0, 127, 127, FlipJp[i]); // captura para o ponteiro St
 		getimage(0, 0, 127, 127, FlipMJp[i]); // captura para a máscara MSt (a mesma imagem de P, que depois será manipulada na rotina PreparaImg)
+		
+		setactivepage(1);
+		setfillstyle(1, RGB(190, 190, 255));
+		bar(100, Alt-50, 100+(i*u), Alt-40);
+		setvisualpage(1);
 	}
-	free(ImgFile);
 
 	for(i = 0; i < SpritePl; i++){
 		PreparaImg(tam, Jp[i], MJp[i]); // configura as cores branca e preta em cada pixel para formar o recorte
@@ -301,6 +359,19 @@ void fase1jogo(){
 }
 
 //________________________________________________________________ Inserção de background em layer 1
+	u = 7.87878787;
+			total++;
+
+	setactivepage(1);
+	setfillstyle(1, RGB(0, 0, 0));
+	bar(0,0,Larg,Alt);
+	setbkcolor(RGB(0, 0, 0));
+	rectangle(100, Alt-50, Larg-100, Alt-40);
+	rectangle(100, Alt-30, Larg-100, Alt-20);
+	setfillstyle(1, RGB(190, 190, 255));
+	bar(100, Alt-30, 100+total*((Larg-200)/4), Alt-20);
+	setvisualpage(1);
+	
 	tam = imagesize(0,0,329, 329);
 	for(i = 0; i < QtdeBg; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		Bg[i] = (unsigned char *)malloc(tam);
@@ -308,12 +379,17 @@ void fase1jogo(){
 	
 	char ImgFile[35];
 	for (i = 0; i < QtdeBg; i++){
+		setactivepage(2);
 		sprintf(ImgFile,".\\images\\background\\Bg (%d).bmp",i);
 		
 		readimagefile(ImgFile, 0, 0, 329, 329);
 		getimage(0, 0, 329, 329, Bg[i]); // captura para o ponteiro R
+		
+		setactivepage(1);
+		setfillstyle(1, RGB(190, 190, 255));
+		bar(100, Alt-50, 100+(i*u), Alt-40);
+		setvisualpage(1);
 	}
-	free(ImgFile);
 	
 /*
 //________________________________________________________________ Inserção de background em layer 2 -> Rocha
@@ -472,19 +548,77 @@ void fase1jogo(){
 					if(psg.y <= inimigos[i].altura && psg.altura >= inimigos[i].y) morte = true;
 				}
 			}
-			
-			
-			
+	//___________________________________________________________________________________	Troca de música		
+			if (GetKeyState(0x4D)&0x80){ // Tecla M
+				switchmusic = true;
+			}
+			if (switchmusic == true){
+				volumcont += passomusica;
+				waveOutSetVolume(0,volumes[volumcont]); 
+				
+				if (volumcont == 15){
+					mciSendString("close Music1", NULL, 0, 0);
+					passomusica = -passomusica;
+				}
+				if (volumcont == 0){
+					sndPlaySound(".\\songs\\primeiro_efeito1.wav", SND_ASYNC);
+					mciSendString("play Music2 repeat", NULL, 0, 0);
+					//mciSendString("play Efect1", NULL, 0, 0);
+					switchmusic = false;
+					passomusica = -passomusica;
+				}
+			}
+			printf("volume: %d    switchmusic:%d \n",volumcont,switchmusic);
+
 	//_________________________________________________________ Andar para esquerda e direita da tela		
 			
 			if (GetKeyState(VK_LEFT)&0x80 && !(GetKeyState(VK_RIGHT)&0x80)) {
-				if (-inicio > 0){
+				if (psg.x > Larg/2){
+					psg.x -= Passo_X;
+					psg.largura -= Passo_X;
+					
+					for (i = 0; i < Qtde_chao; i++){
+						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
+							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
+								psg.x += Passo_X;
+								psg.largura += Passo_X; 
+								break;
+							}	
+						}
+					}
+					
+					moved = true;					
+					if (pulando == 0) direcao = 2;
+					if (ande != QtdePsg-1) ande += 2;
+					if (ande > QtdePsg-1) ande = QtdePsg-1;
+					else if (ande == QtdePsg-1) ande = 0;
+					
+				}else if (-inicio > 0){
 					if (velocidade_pos < 1) velocidade_pos = 1;				
 					inicio = inicio + (5*velocidade_pos);
 					
 					for (i = 0; i < Qtde_chao; i++){
 						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
 							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
+						}
+					}
+					
+					moved = true;					
+					if (pulando == 0) direcao = 2;
+					if (ande != QtdePsg-1) ande += 2;
+					if (ande > QtdePsg-1) ande = QtdePsg-1;
+					else if (ande == QtdePsg-1) ande = 0;
+				}else if(psg.x > 0){
+					psg.x -= Passo_X;
+					psg.largura -= Passo_X;
+					
+					for (i = 0; i < Qtde_chao; i++){
+						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
+							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
+								psg.x += Passo_X;
+								psg.largura += Passo_X; 
+								break;
+							}	
 						}
 					}
 					
@@ -516,8 +650,23 @@ void fase1jogo(){
 			}
 			
 			if (GetKeyState(VK_RIGHT)&0x80 && !(GetKeyState(VK_LEFT)&0x80)) {
-				
-				if (-inicio < 237 ||(altitude >= 1230 && -inicio < 1230)){
+				if(psg.x < Larg/2){
+					psg.x += Passo_X;
+					psg.largura += Passo_X;
+					
+					for (i = 0; i < Qtde_chao; i++){
+						if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
+							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+						}
+					}
+					
+					moved = true;				
+					if (pulando == 0) direcao = 1;
+					if (ande != QtdePsg-1) ande += 2;
+					if (ande > QtdePsg-1) ande = QtdePsg-1;
+					else if (ande == QtdePsg-1) ande = 0;					
+					
+				}else if (-inicio < 237 ||(altitude >= 1230 && -inicio < 1230)){
 					if (velocidade_neg < 1) velocidade_neg = 1;
 					inicio = inicio - (5*velocidade_neg);		
 					
@@ -533,6 +682,21 @@ void fase1jogo(){
 					if (ande != QtdePsg-1) ande += 2;
 					if (ande > QtdePsg-1) ande = QtdePsg-1;
 					else if (ande == QtdePsg-1) ande = 0;					
+				}else if(psg.largura < Larg){
+					psg.x += Passo_X;
+					psg.largura += Passo_X;
+					
+					for (i = 0; i < Qtde_chao; i++){
+						if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
+							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+						}
+					}
+					
+					moved = true;				
+					if (pulando == 0) direcao = 1;
+					if (ande != QtdePsg-1) ande += 2;
+					if (ande > QtdePsg-1) ande = QtdePsg-1;
+					else if (ande == QtdePsg-1) ande = 0;
 				}
 
 	
@@ -691,6 +855,19 @@ void TelaInicial(){
 	int tam,tamBg,tamE, i, cont = 4;
 	int C_on = 0, S_on = 0;
 	unsigned char *R[2], *M[2], *S[2], *MS[2], *Bg[2], *E[efeito];
+	
+	printf("Participantes: \n\n");
+	printf("  Ednei Sell dos Santos Junior  \n");
+	printf("  Luciano de Carvalho Lima  \n");
+	printf("  Marcelo Kazuaki Shimada  \n");
+	printf("  Matheus Ferrandes de Mayo Gomes Beato  \n");
+	printf("  Thiago Oliveira Monte Alves de Araujo  \n\n");
+	
+	setactivepage(1);
+	setfillstyle(1, RGB(0, 0, 0));
+	bar(0,0,Larg,Alt);
+	setbkcolor(RGB(0, 0, 0));
+	setvisualpage(1);
 		
 	tamE = imagesize(0,0,719, 479);
 	for(i = 0; i < efeito; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
@@ -709,32 +886,18 @@ void TelaInicial(){
 	for(i = 0; i < 2; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		Bg[i] = (unsigned char *)malloc(tamBg);
 	}
+	
+	char ImgFile[35];
+	for (i = 0; i < efeito; i++){
+		setactivepage(2);
+		sprintf(ImgFile,".\\images\\efeitos\\Efeito%d.bmp",i);
 
-	readimagefile(".\\images\\efeitos\\Efeito.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[0]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito1.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[1]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito2.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[2]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito3.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[3]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito4.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[4]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito5.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[5]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito6.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[6]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito7.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[7]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito8.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[8]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito9.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[9]); // captura para o ponteiro R
-	readimagefile(".\\images\\efeitos\\Efeito10.bmp", 0, 0, 719, 479);
-	getimage(0, 0, 719, 479, E[10]); // captura para o ponteiro R
-//	readimagefile(".\\images\\efeitos\\Efeito11.bmp", 0, 0, 719, 479);
-//	getimage(0, 0, 719, 479, E[11]); // captura para o ponteiro R
+		readimagefile(ImgFile, 0, 0, 719, 479);
+		getimage(0, 0, 719, 479, E[i]); // captura para o ponteiro R
 		
+	}
+	
+	setactivepage(2);
 	readimagefile(".\\images\\bg_4.bmp", 0, 0, 719, 479);
 	getimage(0, 0, 719, 479, Bg[0]); // captura para o ponteiro R
 
@@ -756,6 +919,8 @@ void TelaInicial(){
 	readimagefile(".\\images\\sair_off.bmp", 0, 0, 268, 83);
 	getimage(0, 0, 268, 83, S[0]); // captura para o ponteiro R
 	getimage(0, 0, 268, 83, MS[0]); // captura para o ponteiro M
+	
+
 	
 	for(i = 0; i < 2; i++){
 	PreparaImg(tam, R[i], M[i]); // configura as cores branca e preta em cada pixel para formar o recorte
@@ -805,7 +970,7 @@ void TelaInicial(){
 				cont = cont - 0.25;
 			}
 			if (GetKeyState(VK_RETURN)&0x80){
-				if (C_on == true) fase1jogo();
+				if (C_on == true)fase1jogo();
 				if (S_on == true) break;
 			}
 			
@@ -827,7 +992,7 @@ int main(void){
 	Alt = 480;
 	initwindow(Larg, Alt,"Rise");
 	
-	//TelaInicial();
+//	TelaInicial();
 	fase1jogo();
 	
 	closegraph();
