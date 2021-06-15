@@ -212,9 +212,7 @@ void fase1jogo(){
 //________________________________________________________________ carregando as músicas do jogo
 	waveOutSetVolume(0,volumes[volumcont]); 
 	mciSendString("open .\\songs\\musica_inicio_do_jogo.mp3 type MPEGVideo alias Music1", NULL, 0, 0); 
-//	mciSendString("open .\\songs\\primeiro_efeito.mp3 type MPEGVideo alias Efect1", NULL, 0, 0); 
 	mciSendString("open .\\songs\\segunda_musica_do_jogo.mp3 type MPEGVideo alias Music2", NULL, 0, 0); 
-//	mciSendString("open .\\songs\\segundo_efeito.mp3 type MPEGVideo alias Efect2", NULL, 0, 0); 
 	mciSendString("open .\\songs\\terceira_musica_do_jogo.mp3 type MPEGVideo alias Music3", NULL, 0, 0);
 	mciSendString("open .\\songs\\musica_final_do_jogo.mp3 type MPEGVideo alias Ending", NULL, 0, 0);
 	mciSendString("play Music1 repeat", NULL, 0, 0);
@@ -419,9 +417,9 @@ void fase1jogo(){
 //_______________________________________________________________ 
 	
 	altura_psg = 89;
-	largura_psg = 70;
+	largura_psg = 30;
 		
-	psg.x = Larg/2-(largura_psg/2);
+	psg.x = Larg/2-((largura_psg)/2);
 	psg.y = Alt-altura_psg-50; 
 	psg.largura = psg.x + largura_psg;
 	psg.altura = psg.y + altura_psg;
@@ -486,33 +484,33 @@ void fase1jogo(){
 				colum += 330;	
 			}
 		
-			//barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);   // verificador de colisão do personagem
+//			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);   // verificador de colisão do personagem
 			
 			switch(direcao){
 				case 1: // personagem andando para a direita		
-					putimage(psg.x-29, psg.y-Altdesenho, M[ande], AND_PUT);
-    				putimage(psg.x-29, psg.y-Altdesenho, R[ande], OR_PUT);					
+					putimage(psg.x-49, psg.y-Altdesenho, M[ande], AND_PUT);
+    				putimage(psg.x-49, psg.y-Altdesenho, R[ande], OR_PUT);					
 					break;
 				
 				case 2: // personagem andando para a esquerda
-					putimage(psg.x-29, psg.y-Altdesenho, FlipM[ande], AND_PUT);
-    				putimage(psg.x-29, psg.y-Altdesenho, FlipR[ande], OR_PUT);					
+					putimage(psg.x-49, psg.y-Altdesenho, FlipM[ande], AND_PUT);
+    				putimage(psg.x-49, psg.y-Altdesenho, FlipR[ande], OR_PUT);					
 					break;
 				case 3: // personagem parado para a direita
-					putimage(psg.x-29, psg.y-Altdesenho, MSt[stoped], AND_PUT);
-    				putimage(psg.x-29, psg.y-Altdesenho, St[stoped], OR_PUT);					
+					putimage(psg.x-49, psg.y-Altdesenho, MSt[stoped], AND_PUT);
+    				putimage(psg.x-49, psg.y-Altdesenho, St[stoped], OR_PUT);					
 					break;
 				case 4: // personagem parado para a esquerda
-					putimage(psg.x-29, psg.y-Altdesenho, FlipMSt[stoped], AND_PUT);
-    				putimage(psg.x-29, psg.y-Altdesenho, FlipSt[stoped], OR_PUT);					
+					putimage(psg.x-49, psg.y-Altdesenho, FlipMSt[stoped], AND_PUT);
+    				putimage(psg.x-49, psg.y-Altdesenho, FlipSt[stoped], OR_PUT);					
 					break;
 				case 5: // personagem pulando para a direita
-					putimage(psg.x-29, psg.y-Altdesenho, MJp[pulando], AND_PUT);
-    				putimage(psg.x-29, psg.y-Altdesenho, Jp[pulando], OR_PUT);					
+					putimage(psg.x-49, psg.y-Altdesenho, MJp[pulando], AND_PUT);
+    				putimage(psg.x-49, psg.y-Altdesenho, Jp[pulando], OR_PUT);					
 					break;
 				case 6: // personagem pulando para a esquerda
-					putimage(psg.x-29, psg.y-Altdesenho, FlipMJp[pulando], AND_PUT);
-    				putimage(psg.x-29, psg.y-Altdesenho, FlipJp[pulando], OR_PUT);					
+					putimage(psg.x-49, psg.y-Altdesenho, FlipMJp[pulando], AND_PUT);
+    				putimage(psg.x-49, psg.y-Altdesenho, FlipJp[pulando], OR_PUT);					
 					break;
 				
 			}
@@ -568,66 +566,69 @@ void fase1jogo(){
 					passomusica = -passomusica;
 				}
 			}
-			printf("volume: %d    switchmusic:%d \n",volumcont,switchmusic);
+//			printf("volume: %d    switchmusic:%d \n",volumcont,switchmusic);
 
 	//_________________________________________________________ Andar para esquerda e direita da tela		
 			
 			if (GetKeyState(VK_LEFT)&0x80 && !(GetKeyState(VK_RIGHT)&0x80)) {
-				if (psg.x > Larg/2){
-					psg.x -= Passo_X;
-					psg.largura -= Passo_X;
-					
-					for (i = 0; i < Qtde_chao; i++){
-						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
-							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
-								psg.x += Passo_X;
-								psg.largura += Passo_X; 
-								break;
-							}	
+				if (animation == false){
+					if (psg.x > Larg/2){
+						psg.x -= Passo_X;
+						psg.largura -= Passo_X;
+						
+						for (i = 0; i < Qtde_chao; i++){
+							if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
+									psg.x += Passo_X;
+									psg.largura += Passo_X; 
+									break;
+								}	
+							}
 						}
-					}
-					
-					moved = true;					
-					if (pulando == 0) direcao = 2;
-					if (ande != QtdePsg-1) ande += 2;
-					if (ande > QtdePsg-1) ande = QtdePsg-1;
-					else if (ande == QtdePsg-1) ande = 0;
-					
-				}else if (-inicio > 0){
-					if (velocidade_pos < 1) velocidade_pos = 1;				
-					inicio = inicio + (5*velocidade_pos);
-					
-					for (i = 0; i < Qtde_chao; i++){
-						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
-							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
+						
+						moved = true;					
+						if (pulando == 0) direcao = 2;
+						if (ande != QtdePsg-1) ande += 2;
+						if (ande > QtdePsg-1) ande = QtdePsg-1;
+						else if (ande == QtdePsg-1) ande = 0;
+						
+					}else if (-inicio > 0){
+						if (velocidade_pos < 1) velocidade_pos = 1;				
+						inicio = inicio + (5*velocidade_pos);
+						
+						for (i = 0; i < Qtde_chao; i++){
+							if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
+							}
 						}
-					}
-					
-					moved = true;					
-					if (pulando == 0) direcao = 2;
-					if (ande != QtdePsg-1) ande += 2;
-					if (ande > QtdePsg-1) ande = QtdePsg-1;
-					else if (ande == QtdePsg-1) ande = 0;
-				}else if(psg.x > 0){
-					psg.x -= Passo_X;
-					psg.largura -= Passo_X;
-					
-					for (i = 0; i < Qtde_chao; i++){
-						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
-							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
-								psg.x += Passo_X;
-								psg.largura += Passo_X; 
-								break;
-							}	
+						
+						moved = true;					
+						if (pulando == 0) direcao = 2;
+						if (ande != QtdePsg-1) ande += 2;
+						if (ande > QtdePsg-1) ande = QtdePsg-1;
+						else if (ande == QtdePsg-1) ande = 0;
+					}else if(psg.x > 0){
+						psg.x -= Passo_X;
+						psg.largura -= Passo_X;
+						
+						for (i = 0; i < Qtde_chao; i++){
+							if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
+									psg.x += Passo_X;
+									psg.largura += Passo_X; 
+									break;
+								}	
+							}
 						}
+						
+						moved = true;					
+						if (pulando == 0) direcao = 2;
+						if (ande != QtdePsg-1) ande += 2;
+						if (ande > QtdePsg-1) ande = QtdePsg-1;
+						else if (ande == QtdePsg-1) ande = 0;
 					}
-					
-					moved = true;					
-					if (pulando == 0) direcao = 2;
-					if (ande != QtdePsg-1) ande += 2;
-					if (ande > QtdePsg-1) ande = QtdePsg-1;
-					else if (ande == QtdePsg-1) ande = 0;
 				}
+
 				
 
 					
@@ -650,56 +651,56 @@ void fase1jogo(){
 			}
 			
 			if (GetKeyState(VK_RIGHT)&0x80 && !(GetKeyState(VK_LEFT)&0x80)) {
-				if(psg.x < Larg/2){
-					psg.x += Passo_X;
-					psg.largura += Passo_X;
-					
-					for (i = 0; i < Qtde_chao; i++){
-						if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
-							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+				if (animation == false){
+					if(psg.x < Larg/2){
+						psg.x += Passo_X;
+						psg.largura += Passo_X;
+						
+						for (i = 0; i < Qtde_chao; i++){
+							if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+							}
 						}
-					}
-					
-					moved = true;				
-					if (pulando == 0) direcao = 1;
-					if (ande != QtdePsg-1) ande += 2;
-					if (ande > QtdePsg-1) ande = QtdePsg-1;
-					else if (ande == QtdePsg-1) ande = 0;					
-					
-				}else if (-inicio < 237 ||(altitude >= 1230 && -inicio < 1230)){
-					if (velocidade_neg < 1) velocidade_neg = 1;
-					inicio = inicio - (5*velocidade_neg);		
-					
-					
-					for (i = 0; i < Qtde_chao; i++){
-						if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
-							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+						
+						moved = true;				
+						if (pulando == 0) direcao = 1;
+						if (ande != QtdePsg-1) ande += 2;
+						if (ande > QtdePsg-1) ande = QtdePsg-1;
+						else if (ande == QtdePsg-1) ande = 0;					
+						
+					}else if (-inicio < 237 ||(altitude >= 1230 && -inicio < 1230)){
+						if (velocidade_neg < 1) velocidade_neg = 1;
+						inicio = inicio - (5*velocidade_neg);		
+						
+						
+						for (i = 0; i < Qtde_chao; i++){
+							if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+							}
 						}
-					}
-					
-					moved = true;				
-					if (pulando == 0) direcao = 1;
-					if (ande != QtdePsg-1) ande += 2;
-					if (ande > QtdePsg-1) ande = QtdePsg-1;
-					else if (ande == QtdePsg-1) ande = 0;					
-				}else if(psg.largura < Larg){
-					psg.x += Passo_X;
-					psg.largura += Passo_X;
-					
-					for (i = 0; i < Qtde_chao; i++){
-						if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
-							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+						
+						moved = true;				
+						if (pulando == 0) direcao = 1;
+						if (ande != QtdePsg-1) ande += 2;
+						if (ande > QtdePsg-1) ande = QtdePsg-1;
+						else if (ande == QtdePsg-1) ande = 0;					
+					}else if(psg.largura < Larg){
+						psg.x += Passo_X;
+						psg.largura += Passo_X;
+						
+						for (i = 0; i < Qtde_chao; i++){
+							if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+							}
 						}
+						
+						moved = true;				
+						if (pulando == 0) direcao = 1;
+						if (ande != QtdePsg-1) ande += 2;
+						if (ande > QtdePsg-1) ande = QtdePsg-1;
+						else if (ande == QtdePsg-1) ande = 0;
 					}
-					
-					moved = true;				
-					if (pulando == 0) direcao = 1;
-					if (ande != QtdePsg-1) ande += 2;
-					if (ande > QtdePsg-1) ande = QtdePsg-1;
-					else if (ande == QtdePsg-1) ande = 0;
 				}
-
-	
 			}else if(velocidade_neg > 0) {
 				if (Pulo == false && animation == false){
 					inicio = inicio - (5*velocidade_neg);	
@@ -732,6 +733,9 @@ void fase1jogo(){
 				if (Pulo == false && tempo == 1 && chao == true && animation == false) Pulo = true;
 			}
 			
+			if ((GetKeyState(VK_RIGHT)&0x80) && (GetKeyState(VK_UP)&0x80)) inercia_Right = true;
+			if ((GetKeyState(VK_LEFT)&0x80) && (GetKeyState(VK_UP)&0x80)) inercia_Left = true;
+			
 			if (Pulo == true){
 				
 				if(direcao == 1 || direcao == 3) direcao = 5;
@@ -746,8 +750,23 @@ void fase1jogo(){
 					
 					psg.y = psg.y - Passo_Y-15-(velocidade);
 					psg.altura = psg.altura - Passo_Y-15-(velocidade);
-//					psg.y -= 4;
-//					psg.altura -= 1;
+					
+					if (inercia_Right == true){
+						inicio -= Passo_X;
+						for (i = 0; i < Qtde_chao; i++){
+							if (psg.x <= colisao_chao[i].largura - (Passo_X) && psg.largura >= colisao_chao[i].x - (Passo_X)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio += Passo_X; break;}	
+							}
+						}
+					} 
+					else if (inercia_Left == true){
+						inicio += Passo_X;
+						for (i = 0; i < Qtde_chao; i++){
+							if (psg.x <= colisao_chao[i].largura + (Passo_X) && psg.largura >= colisao_chao[i].x + (Passo_X)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio -= Passo_X; break;}	
+							}
+						}
+					}
 	
 					if (pulando <= 18 && Altdesenho > 2)Altdesenho -= 7;
 
@@ -759,7 +778,8 @@ void fase1jogo(){
 							psg.altura = psg.y + altura_psg; 
 							tempo = 0;
 							Pulo = false;
-							
+							inercia_Right = false;
+							inercia_Left = false;
 							break;	
 							} 	
 						}
@@ -771,7 +791,8 @@ void fase1jogo(){
 			
 			
 			if (chao == false){
-				if (tempo == 1) multiplicador = 5.0;
+				
+				if (tempo == 1) multiplicador += 1.5;
 				else multiplicador = 1.5;
 				psg.y = psg.y + (Passo_Y*(tempo*multiplicador)); // constantemente puxa para baixo, com valor menor crescente, até superar o valor do pulo
 				psg.altura = psg.altura + (Passo_Y*(tempo*multiplicador));
