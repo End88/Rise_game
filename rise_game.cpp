@@ -144,7 +144,8 @@ void defineFundo(int Num_Quad,int x, int y, int largura, int altura){
 #define QtdePsg  90
 #define SpritePr  137 // Sprite parado
 #define SpritePl  48 // Sprite Pulo
-#define QtdeBg 67
+#define QtdeBg1 72
+#define QtdeBg2 289
 
 
 void fase1jogo(){
@@ -155,7 +156,7 @@ void fase1jogo(){
 	unsigned char *St[SpritePr], *MSt[SpritePr], *FlipSt[SpritePr],*FlipMSt[SpritePr]; // Imagens parado
 	unsigned char *Jp[SpritePl], *MJp[SpritePl], *FlipJp[SpritePl],*FlipMJp[SpritePl]; // Imagens pulando
 	
-	unsigned char *Bg[QtdeBg];
+	unsigned char *Bg[QtdeBg1], *Bg2[QtdeBg2], *MBg2[QtdeBg2]; // Paralax e background
 	
 	TQUADRADO *inimigos, psg, draw;
 	int Qtde_chao, Qtde_inimigos;
@@ -167,11 +168,12 @@ void fase1jogo(){
 	double velocidade_pos = 1.0, velocidade_neg = 1.0, velocidade, Velocidade_Max = 3.0;
 	double multiplicador;	
 	
+	int EditUp = 0, EditHor = 0;
 	int altura_psg, largura_psg;
 	double Altdesenho = 29;
 	double altitude = 0.0;
 	
-	int i,X,cont; // Variáveis i, X e cont armezenam informações dinámicas.
+	int i,X,cont = 0; // Variáveis i, X e cont armezenam informações dinámicas.
 	int imgcont, volumcont = 0, passomusica = 1;
 	bool switchmusic = false;
 	double inicio = 0; // Váriável Início define o início da tela
@@ -183,6 +185,8 @@ void fase1jogo(){
 	bool moved = false;
 	bool inercia_Right = false, inercia_Left = false;
 	double z;
+	
+	double *posicao_Chao;
 	
 	unsigned long long gt1, gt2;
 	
@@ -271,7 +275,7 @@ void fase1jogo(){
 	rectangle(100, Alt-50, Larg-100, Alt-40);
 		rectangle(100, Alt-30, Larg-100, Alt-20);
 		setfillstyle(1, RGB(190, 190, 255));
-	bar(100, Alt-30, 100+total*((Larg-200)/4), Alt-20);
+	bar(100, Alt-30, 100+total*((Larg-200)/5), Alt-20);
 	setvisualpage(1);
 	for(i = 0; i < SpritePr; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		St[i] = (unsigned char *)malloc(tam);
@@ -319,7 +323,7 @@ void fase1jogo(){
 	rectangle(100, Alt-50, Larg-100, Alt-40);
 		rectangle(100, Alt-30, Larg-100, Alt-20);
 		setfillstyle(1, RGB(190, 190, 255));
-	bar(100, Alt-30, 100+total*((Larg-200)/4), Alt-20);
+	bar(100, Alt-30, 100+total*((Larg-200)/5), Alt-20);
 	setvisualpage(1);
 	for(i = 0; i < SpritePl; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		Jp[i] = (unsigned char *)malloc(tam);
@@ -357,7 +361,7 @@ void fase1jogo(){
 }
 
 //________________________________________________________________ Inserção de background em layer 1
-	u = 7.87878787;
+	u = 7.32394366;
 			total++;
 
 	setactivepage(1);
@@ -367,27 +371,61 @@ void fase1jogo(){
 	rectangle(100, Alt-50, Larg-100, Alt-40);
 	rectangle(100, Alt-30, Larg-100, Alt-20);
 	setfillstyle(1, RGB(190, 190, 255));
-	bar(100, Alt-30, 100+total*((Larg-200)/4), Alt-20);
+	bar(100, Alt-30, 100+total*((Larg-200)/5), Alt-20);
 	setvisualpage(1);
 	
-	tam = imagesize(0,0,329, 329);
-	for(i = 0; i < QtdeBg; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+	tam = imagesize(0,0,401, 401);
+	for(i = 0; i < QtdeBg1; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
 		Bg[i] = (unsigned char *)malloc(tam);
 	}
 	
 	char ImgFile[35];
-	for (i = 0; i < QtdeBg; i++){
+	for (i = 0; i < QtdeBg1; i++){
 		setactivepage(2);
-		sprintf(ImgFile,".\\images\\background\\Bg (%d).bmp",i);
+		sprintf(ImgFile,".\\images\\background1\\Bg (%d).bmp",i);
 		
-		readimagefile(ImgFile, 0, 0, 329, 329);
-		getimage(0, 0, 329, 329, Bg[i]); // captura para o ponteiro R
+		readimagefile(ImgFile, 0, 0, 401, 401);
+		getimage(0, 0, 401, 401, Bg[i]); // captura para o ponteiro R
 		
 		setactivepage(1);
 		setfillstyle(1, RGB(190, 190, 255));
 		bar(100, Alt-50, 100+(i*u), Alt-40);
 		setvisualpage(1);
 	}
+//_________________________________________________________________ Inserção de background em layer 2
+	u = 1.805555555;
+			total++;
+
+	setactivepage(1);
+	setfillstyle(1, RGB(0, 0, 0));
+	bar(0,0,Larg,Alt);
+	setbkcolor(RGB(0, 0, 0));
+	rectangle(100, Alt-50, Larg-100, Alt-40);
+	rectangle(100, Alt-30, Larg-100, Alt-20);
+	setfillstyle(1, RGB(190, 190, 255));
+	bar(100, Alt-30, 100+total*((Larg-200)/5), Alt-20);
+	setvisualpage(1);
+	
+	tam = imagesize(0,0,397, 397);
+	for(i = 0; i < QtdeBg2; i++){ // é necessário alocar memória para cada imagem contida no vetor de ponteiros
+		Bg2[i] = (unsigned char *)malloc(tam);
+		MBg2[i] = (unsigned char *)malloc(tam);
+	}
+	
+	for (i = 0; i < QtdeBg2; i++){
+		setactivepage(2);
+		sprintf(ImgFile,".\\images\\background4\\Bg (%d).bmp",i);
+		
+		readimagefile(ImgFile, 0, 0, 397, 397);
+		getimage(0, 0, 397, 397, Bg2[i]); // captura para o ponteiro Bg2
+//		getimage(0, 0, 397, 397, MBg2[i]); // captura para o ponteiro MBg2
+		
+		setactivepage(1);
+		setfillstyle(1, RGB(190, 190, 255));
+		bar(100, Alt-50, 100+(i*u), Alt-40);
+		setvisualpage(1);
+	}
+	
 	
 /*
 //________________________________________________________________ Inserção de background em layer 2 -> Rocha
@@ -445,19 +483,19 @@ void fase1jogo(){
 			
 			// ______________________________________ Desenho do chão			
 			for (i = 0; i < Qtde_chao; i++){
-				colisao_chao[i].x = inicio+Larg;
+				colisao_chao[i].x = inicio;
 				colisao_chao[i].y = Alt-altitude;	
-				colisao_chao[i].largura = inicio+Larg;
+				colisao_chao[i].largura = inicio;
 				colisao_chao[i].altura = Alt-altitude;
 			}
 			
 			defineFundo(0,-Larg,50,0,0);
-			defineFundo(1,-Larg/2+200,100,50,90);
-			defineFundo(2,-Larg/2+50,150,-Larg/2+100,140);
-			defineFundo(3,-Larg/2+200,250,50,240);
+			defineFundo(1,238,180,275,170);
+			defineFundo(2,374,252,471,236);
+/*			defineFundo(3,-Larg/2+200,250,50,240);
 			defineFundo(4,650,235,695,230);
 			defineFundo(5,800,290,900,285);
-			defineFundo(6,1000,340,1500,335);
+			defineFundo(6,1000,340,1500,335);*/
 			
 			//_________________________________________ Desenho dos inimigos
 			inimigos[0].x = inicio+Larg+1200+andando;
@@ -472,16 +510,17 @@ void fase1jogo(){
 			cleardevice();	
 			fundo(inicio,Larg,Alt,i,X);
 			
-			pilar = 3960;
+			pilar = 7164;
 			colum = 0;
-			for(i = QtdeBg-1; i >= 0; i--){
+			for(i = 0; i < QtdeBg2; i++){
 				
-				if (colum+inicio-(Larg/2) <= Larg && Alt-pilar-altitude+330 >= 0) putimage(colum+inicio-(Larg/2), Alt-pilar-altitude, Bg[i], COPY_PUT); 
-				if (i%6 == 0){
+				if (colum+inicio-(Larg/2)-100 <= Larg && Alt-pilar-altitude+398 >= 0 && 
+					colum+inicio-(Larg/2)-100+398 >= 0 && Alt-pilar-altitude <= Alt) putimage(colum+inicio-(Larg/2)-100, Alt-pilar-altitude, Bg2[i], COPY_PUT); 
+				if ((i != 0) && i%16 == 0){
 					colum = 0;
-					pilar -= 330;	
+					pilar -= 398;	
 				} 
-				colum += 330;	
+				colum += 398;	
 			}
 		
 //			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);   // verificador de colisão do personagem
@@ -525,7 +564,8 @@ void fase1jogo(){
 				barra(inimigos[i].x, inimigos[i].y, inimigos[i].largura, inimigos[i].altura,escarlate);
 			}
 			
-			linha(0,Alt-25,Larg,Alt-25,escarlate);	
+			linha(Larg/2+EditHor,0,Larg/2+EditHor,Alt,escarlate);
+			linha(0,Alt/2+EditUp,Larg,Alt/2+EditUp,escarlate);	
 			
 			setvisualpage(pg);
 			
@@ -569,7 +609,37 @@ void fase1jogo(){
 //			printf("volume: %d    switchmusic:%d \n",volumcont,switchmusic);
 
 	//_________________________________________________________ Andar para esquerda e direita da tela		
-			
+//precisa da um jeito nisso mano...			
+			if (GetKeyState(VK_RETURN)&0x80){
+				printf("posicao X: %lf     ||   Posicao Y: %lf\n\n",-inicio+Larg/2+EditHor, Alt/2-altitude-EditUp);
+				
+				cont++;
+				posicao_Chao = (double*)realloc(posicao_Chao,sizeof(int)*cont);
+				posicao_Chao[cont-1] = -inicio+Larg/2+EditHor;
+				printf("%d ",cont);
+				
+				cont++;
+				posicao_Chao = (double*)realloc(posicao_Chao,sizeof(int)*cont);
+				posicao_Chao[cont-1] = Alt/2-altitude-EditUp;
+				
+				for (i = 0; i < cont; i++){
+					printf("%d ",posicao_Chao[i]);
+				}
+			}
+		if (GetKeyState(0x57)&0x80){ // tecla W
+			EditUp-= 5;
+		}
+		if (GetKeyState(0x53)&0x80){ // tecla S
+			EditUp+= 5;
+		}
+		if (GetKeyState(0x41)&0x80){ // tecla A
+			EditHor-= 5;
+		}
+		if (GetKeyState(0x44)&0x80){ // tecla D
+			EditHor+= 5;
+		}
+/*			
+
 			if (GetKeyState(VK_LEFT)&0x80 && !(GetKeyState(VK_RIGHT)&0x80)) {
 				if (animation == false){
 					if (psg.x > Larg/2){
@@ -649,7 +719,14 @@ void fase1jogo(){
 				}
 				velocidade_pos -= 0.5;
 			}
-			
+*/
+if (GetKeyState(VK_LEFT)&0x80){
+	inicio += 5;
+}
+if (GetKeyState(VK_RIGHT)&0x80){
+	inicio -= 5;
+}
+/*			
 			if (GetKeyState(VK_RIGHT)&0x80 && !(GetKeyState(VK_LEFT)&0x80)) {
 				if (animation == false){
 					if(psg.x < Larg/2){
@@ -668,7 +745,7 @@ void fase1jogo(){
 						if (ande > QtdePsg-1) ande = QtdePsg-1;
 						else if (ande == QtdePsg-1) ande = 0;					
 						
-					}else if (-inicio < 237 ||(altitude >= 1230 && -inicio < 1230)){
+					}else if (-inicio < 60 ||(altitude >= 1230 && -inicio < 1230)){
 						if (velocidade_neg < 1) velocidade_neg = 1;
 						inicio = inicio - (5*velocidade_neg);		
 						
@@ -718,7 +795,7 @@ void fase1jogo(){
 				}
 				velocidade_neg -= 0.5;
 			}
-			
+*/			
 			if (moved == false){
 				if(direcao == 1) direcao = 3;
 				else if(direcao == 2) direcao = 4;
@@ -728,11 +805,13 @@ void fase1jogo(){
 			}
 			if (velocidade_pos == 1) velocidade = velocidade_neg;
 			else velocidade = velocidade_pos;
+
 	//________________________________________________________________________
+	/*
 			if (GetKeyState(VK_UP)&0x80){
 				if (Pulo == false && tempo == 1 && chao == true && animation == false) Pulo = true;
 			}
-			
+			*/
 			if ((GetKeyState(VK_RIGHT)&0x80) && (GetKeyState(VK_UP)&0x80)) inercia_Right = true;
 			if ((GetKeyState(VK_LEFT)&0x80) && (GetKeyState(VK_UP)&0x80)) inercia_Left = true;
 			
@@ -843,9 +922,12 @@ void fase1jogo(){
 				psg.y += Alt/3;
 				psg.altura += Alt/3;
 			}
-//			if (GetKeyState(VK_DOWN)&0x80) {
-//				altitude -= 10.0;
-//			}
+			if (GetKeyState(VK_UP)&0x80) {
+				altitude += 5.0;
+			}
+			if (GetKeyState(VK_DOWN)&0x80) {
+				altitude -= 5.0;
+			}
 			
 //			if (psg.altura >= Alt-25) break; //End game por queda
 			
@@ -863,6 +945,7 @@ void fase1jogo(){
 	} 
 	free(colisao_chao);
 	free(inimigos);
+	free(posicao_Chao);
 	free(*R);
 	free(*M);
 }
