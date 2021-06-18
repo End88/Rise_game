@@ -1175,8 +1175,8 @@ int main(void){
 	Alt = 480;
 	initwindow(Larg, Alt,"Rise");
 	
-//	TelaInicial();
-	fase1jogo();
+	TelaInicial();
+//	fase1jogo();
 	
 	closegraph();
   	return(0);
