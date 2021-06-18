@@ -10,6 +10,7 @@ Thiago Oliveira Monte Alves de Araujo
 
 
 #include<stdio.h>
+#include<stdlib.h>
 #include<graphics.h>
 #include<time.h>
 #include <windows.h>
@@ -160,7 +161,7 @@ void fase1jogo(){
 	
 	TQUADRADO *inimigos, psg, draw;
 	int Qtde_chao, Qtde_inimigos;
-	int passo_inimigos = 5, andando = 0;
+	int passo_inimigos = 5, andando = 405, passo_inimigo = 10;
 	bool morte = false;
 	
 	int direcao = 1;
@@ -173,7 +174,7 @@ void fase1jogo(){
 	double Altdesenho = 29;
 	double altitude = 0.0;
 	
-	int i,X,cont = 0; // Variáveis i, X e cont armezenam informações dinámicas.
+	int i,X,cont = 0, cont2 = 0; // Variáveis i, X e cont armezenam informações dinámicas.
 	int imgcont, volumcont = 0, passomusica = 1;
 	bool switchmusic = false;
 	double inicio = 0; // Váriável Início define o início da tela
@@ -186,7 +187,10 @@ void fase1jogo(){
 	bool inercia_Right = false, inercia_Left = false;
 	double z;
 	
-	double *posicao_Chao;
+	FILE *piso;
+	int N;
+	int *V;
+	int *posicao_Chao;
 	
 	unsigned long long gt1, gt2;
 	
@@ -202,6 +206,26 @@ void fase1jogo(){
 	
 	int total = -1;
 	char load[5];
+//	inicio = -1150.0;
+//	altitude = -1280.00;
+	
+	piso = fopen("Fase1.txt","r");
+	cont2 = 0;
+	V = NULL;
+	//rewind(piso);
+	while ((fscanf(piso,"%d",&N))!= EOF){
+		cont2++;
+		V = (int*)realloc(V,sizeof(int)*cont2);
+		V[cont2-1] = N;
+	}
+	fclose(piso);
+	for (i = 0; i < cont2; i++){
+		if (i == 0) printf("[%d, ",V[i]);
+		else if (i == cont-1) printf("%d]\n\n ",V[i]);
+		else printf("%d, ",V[i]);
+	}
+
+	
 	total++;
 	setactivepage(1);
 	setfillstyle(1, RGB(0, 0, 0));
@@ -220,6 +244,7 @@ void fase1jogo(){
 	mciSendString("open .\\songs\\terceira_musica_do_jogo.mp3 type MPEGVideo alias Music3", NULL, 0, 0);
 	mciSendString("open .\\songs\\musica_final_do_jogo.mp3 type MPEGVideo alias Ending", NULL, 0, 0);
 	mciSendString("play Music1 repeat", NULL, 0, 0);
+	
 	double u = 5.84269663;
 	if(true){ // facilitador para minimizar total de imagens para personagem
 	
@@ -358,7 +383,7 @@ void fase1jogo(){
 		FlipImg(128,128,FlipJp[i]);
 		FlipImg(128,128,FlipMJp[i]);
 	}
-}
+
 
 //________________________________________________________________ Inserção de background em layer 1
 	u = 7.32394366;
@@ -379,7 +404,7 @@ void fase1jogo(){
 		Bg[i] = (unsigned char *)malloc(tam);
 	}
 	
-	char ImgFile[35];
+
 	for (i = 0; i < QtdeBg1; i++){
 		setactivepage(2);
 		sprintf(ImgFile,".\\images\\background1\\Bg (%d).bmp",i);
@@ -418,15 +443,17 @@ void fase1jogo(){
 		
 		readimagefile(ImgFile, 0, 0, 397, 397);
 		getimage(0, 0, 397, 397, Bg2[i]); // captura para o ponteiro Bg2
-//		getimage(0, 0, 397, 397, MBg2[i]); // captura para o ponteiro MBg2
+		getimage(0, 0, 397, 397, MBg2[i]); // captura para o ponteiro MBg2
 		
 		setactivepage(1);
 		setfillstyle(1, RGB(190, 190, 255));
 		bar(100, Alt-50, 100+(i*u), Alt-40);
 		setvisualpage(1);
 	}
-	
-	
+}
+	for(i = 0; i < QtdeBg2; i++){
+		if(i < 201) PreparaImg(tam, Bg2[i], MBg2[i]); // configura as cores branca e preta em cada pixel para formar o recorte
+	}
 /*
 //________________________________________________________________ Inserção de background em layer 2 -> Rocha
 	
@@ -453,6 +480,7 @@ void fase1jogo(){
 		PreparaImg(tam, R[2], M[2]); // configura as cores branca e preta em cada pixel para formar o recorte
 */
 //_______________________________________________________________ 
+
 	
 	altura_psg = 89;
 	largura_psg = 30;
@@ -463,10 +491,10 @@ void fase1jogo(){
 	psg.altura = psg.y + altura_psg;
 	
 	Passo_X = 4;
-	Passo_Y = 0.5;
+	Passo_Y = 0.45;
 	
-	Qtde_chao = 9;
-	colisao_chao = (TQUADRADO*)malloc(sizeof(TQUADRADO)*Qtde_chao);
+	Qtde_chao = 18;
+	colisao_chao = (TQUADRADO*)malloc(sizeof(TQUADRADO)*cont2);
 	
 	Qtde_inimigos = 1;
 	inimigos = (TQUADRADO*)malloc(sizeof(TQUADRADO)*Qtde_inimigos);
@@ -475,6 +503,12 @@ void fase1jogo(){
 	gt1 = GetTickCount();
 	gt2 = gt1 * 2;
 	
+			inimigos[0].x = inicio+405+passo_inimigo;
+			inimigos[0].y = Alt-altitude-635;
+			inimigos[0].largura = inimigos[0].x+92;
+			inimigos[0].altura = inimigos[0].altura+38;
+			
+	posicao_Chao = NULL;
 //___________________________________________________ Início do laço de movimento
 	while (tecla != ESC){
 		
@@ -482,26 +516,20 @@ void fase1jogo(){
 			gt1 = gt2;
 			
 			// ______________________________________ Desenho do chão			
-			for (i = 0; i < Qtde_chao; i++){
+			for (i = 0; i < cont2; i++){
 				colisao_chao[i].x = inicio;
 				colisao_chao[i].y = Alt-altitude;	
 				colisao_chao[i].largura = inicio;
 				colisao_chao[i].altura = Alt-altitude;
 			}
-			
-			defineFundo(0,-Larg,50,0,0);
-			defineFundo(1,238,180,275,170);
-			defineFundo(2,374,252,471,236);
-/*			defineFundo(3,-Larg/2+200,250,50,240);
-			defineFundo(4,650,235,695,230);
-			defineFundo(5,800,290,900,285);
-			defineFundo(6,1000,340,1500,335);*/
+			if (cont2 >= 2){
+				for(i=0; i< cont2; i+=4){
+					defineFundo(i/4,V[i],V[i+1],V[i+2],V[i+3]);
+				}
+			}
 			
 			//_________________________________________ Desenho dos inimigos
-			inimigos[0].x = inicio+Larg+1200+andando;
-			inimigos[0].y = Alt-360-altitude;
-			inimigos[0].largura = inicio+Larg+1220+andando;
-			inimigos[0].altura = Alt-340-altitude;
+
 			
 			if (pg == 1) pg = 2; else pg = 1;
 			setactivepage(pg);
@@ -513,9 +541,16 @@ void fase1jogo(){
 			pilar = 7164;
 			colum = 0;
 			for(i = 0; i < QtdeBg2; i++){
-				
 				if (colum+inicio-(Larg/2)-100 <= Larg && Alt-pilar-altitude+398 >= 0 && 
-					colum+inicio-(Larg/2)-100+398 >= 0 && Alt-pilar-altitude <= Alt) putimage(colum+inicio-(Larg/2)-100, Alt-pilar-altitude, Bg2[i], COPY_PUT); 
+					colum+inicio-(Larg/2)-100+398 >= 0 && Alt-pilar-altitude <= Alt) {
+					if (i < 201){
+						putimage(colum+inicio-(Larg/2)-100, Alt-pilar-altitude, Bg2[i], COPY_PUT);
+					}else{
+						putimage(colum+inicio-(Larg/2)-100, Alt-pilar-altitude, MBg2[i], AND_PUT);
+						putimage(colum+inicio-(Larg/2)-100, Alt-pilar-altitude, Bg2[i], OR_PUT); 
+					}
+
+					}
 				if ((i != 0) && i%16 == 0){
 					colum = 0;
 					pilar -= 398;	
@@ -523,7 +558,7 @@ void fase1jogo(){
 				colum += 398;	
 			}
 		
-//			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);   // verificador de colisão do personagem
+			barra(psg.x, psg.y, psg.largura, psg.altura, vermelho);   // verificador de colisão do personagem
 			
 			switch(direcao){
 				case 1: // personagem andando para a direita		
@@ -554,7 +589,7 @@ void fase1jogo(){
 				
 			}
 			
-			for (i = 0; i < Qtde_chao; i++){
+			for (i = 0; i < cont2; i++){
 				if ((colisao_chao[i].y <= Alt && colisao_chao[i].altura >= 0 && colisao_chao[i].x <= Larg && colisao_chao[i].largura >= 0)) // Controle de Render
 				barra(colisao_chao[i].x,colisao_chao[i].y,colisao_chao[i].largura,colisao_chao[i].altura,jade);
 			}	
@@ -570,15 +605,13 @@ void fase1jogo(){
 			setvisualpage(pg);
 			
 	//___________________________________________________________________________________ Movimento de inimigos -> Inimigo 1
-			andando = andando + passo_inimigos;
-			if (inimigos[0].x < colisao_chao[7].x){
-				andando = colisao_chao[7].x - (inimigos[0].x - andando) - passo_inimigos; 
-				passo_inimigos = -passo_inimigos;
-			} 
-			if (inimigos[0].largura > colisao_chao[7].largura){
-				andando = colisao_chao[7].largura - (inimigos[0].largura - andando) - passo_inimigos; 
-				passo_inimigos = -passo_inimigos;	
-			} 
+			inimigos[0].x = inicio+andando;
+			inimigos[0].y = Alt-altitude-635;
+			inimigos[0].largura = inimigos[0].x+92;
+			inimigos[0].altura = inimigos[0].y+38;
+			if (inimigos[0].x < 132|| inimigos[0].largura > 450) passo_inimigo = -passo_inimigo;
+
+			andando += passo_inimigo;
 	//___________________________________________________________________________________	Colisão com inimigos
 	
 			for (i = 0; i < Qtde_inimigos; i++){
@@ -586,8 +619,12 @@ void fase1jogo(){
 					if(psg.y <= inimigos[i].altura && psg.altura >= inimigos[i].y) morte = true;
 				}
 			}
-	//___________________________________________________________________________________	Troca de música		
-			if (GetKeyState(0x4D)&0x80){ // Tecla M
+	//___________________________________________________________________________________	Troca de música	
+	
+	//___________________________________________________________________________________	decorrer do jogo
+			
+			if (-inicio > 1800 && -altitude >= 1600 ) Passo_Y = 0.40;	
+			if (-inicio >62 && -inicio < 80 && -altitude >= 1280){ // Tecla M
 				switchmusic = true;
 			}
 			if (switchmusic == true){
@@ -600,32 +637,67 @@ void fase1jogo(){
 				}
 				if (volumcont == 0){
 					sndPlaySound(".\\songs\\primeiro_efeito1.wav", SND_ASYNC);
-					mciSendString("play Music2 repeat", NULL, 0, 0);
 					//mciSendString("play Efect1", NULL, 0, 0);
 					switchmusic = false;
 					passomusica = -passomusica;
 				}
 			}
+			if(-inicio > 200 && -inicio > 220){
+				mciSendString("play Music2 repeat", NULL, 0, 0);
+			}
 //			printf("volume: %d    switchmusic:%d \n",volumcont,switchmusic);
 
-	//_________________________________________________________ Andar para esquerda e direita da tela		
-//precisa da um jeito nisso mano...			
+	//_________________________________________________________ Andar para esquerda e direita da tela					
 			if (GetKeyState(VK_RETURN)&0x80){
-				printf("posicao X: %lf     ||   Posicao Y: %lf\n\n",-inicio+Larg/2+EditHor, Alt/2-altitude-EditUp);
+//				printf("posicao X: %lf     ||     Posicao Y: %lf\n\n",-inicio+Larg/2+EditHor, Alt/2-altitude-EditUp);
+//				printf("%.0lf\n",-inicio+Larg/2+EditHor);
+//				printf("%.0lf\n",Alt/2-altitude-EditUp);
+				printf("Inicio: %lf		||		Altitude: %lf \n\n",inicio,altitude);
+				cont++;
+				posicao_Chao = (int*)realloc(posicao_Chao,sizeof(int)*cont);
+				posicao_Chao[cont-1] = (-inicio+Larg/2+EditHor);
 				
 				cont++;
-				posicao_Chao = (double*)realloc(posicao_Chao,sizeof(int)*cont);
-				posicao_Chao[cont-1] = -inicio+Larg/2+EditHor;
-				printf("%d ",cont);
-				
-				cont++;
-				posicao_Chao = (double*)realloc(posicao_Chao,sizeof(int)*cont);
+				posicao_Chao = (int*)realloc(posicao_Chao,sizeof(int)*cont);
 				posicao_Chao[cont-1] = Alt/2-altitude-EditUp;
 				
 				for (i = 0; i < cont; i++){
-					printf("%d ",posicao_Chao[i]);
+					if (i == 0) printf("[%d, ",posicao_Chao[i]);
+					else if (i == cont-1) printf("%d]\n ",posicao_Chao[i]);
+					else printf("%d, ",posicao_Chao[i]);
+					
 				}
 			}
+			
+			if (GetKeyState(VK_CONTROL)&0x80 && GetKeyState(0x5A)&0x80){ // ctrl z (para apagar uma coordenada previamente colocada
+				if (cont >= 2){
+					cont-= 2;
+					posicao_Chao = (int*)realloc(posicao_Chao,sizeof(int)*cont);
+				}
+				for (i = 0; i < cont; i++){
+					if (i == 0) printf("[%d, ",posicao_Chao[i]);
+					else if (i == cont-1) printf("%d]\n ",posicao_Chao[i]);
+					else printf("%d, ",posicao_Chao[i]);
+					
+				}
+
+			}
+			if (GetKeyState(VK_CONTROL)&0x80 && GetKeyState(0x53)&0x80){ // ctrl S
+				piso = fopen("Fase1.txt","a");
+				for (i = 0; i < cont; i++){
+					printf("\n%d", posicao_Chao[i]);
+					fprintf(piso,"\n%d",posicao_Chao[i]);
+				}fclose(piso);
+			}
+			
+			if (GetKeyState(VK_F5)&0x80){
+				for (i = 0; i < cont; i++){
+					cont2++;
+					V = (int*)realloc(V,sizeof(int)*cont2);
+					V[cont2-1] = posicao_Chao[i];	
+				}				
+			}
+			
 		if (GetKeyState(0x57)&0x80){ // tecla W
 			EditUp-= 5;
 		}
@@ -638,15 +710,15 @@ void fase1jogo(){
 		if (GetKeyState(0x44)&0x80){ // tecla D
 			EditHor+= 5;
 		}
-/*			
+	
 
 			if (GetKeyState(VK_LEFT)&0x80 && !(GetKeyState(VK_RIGHT)&0x80)) {
-				if (animation == false){
+//				if (animation == false){
 					if (psg.x > Larg/2){
 						psg.x -= Passo_X;
 						psg.largura -= Passo_X;
 						
-						for (i = 0; i < Qtde_chao; i++){
+						for (i = 0; i < cont2; i++){
 							if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
 								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
 									psg.x += Passo_X;
@@ -666,7 +738,7 @@ void fase1jogo(){
 						if (velocidade_pos < 1) velocidade_pos = 1;				
 						inicio = inicio + (5*velocidade_pos);
 						
-						for (i = 0; i < Qtde_chao; i++){
+						for (i = 0; i < cont2; i++){
 							if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
 								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
 							}
@@ -681,7 +753,7 @@ void fase1jogo(){
 						psg.x -= Passo_X;
 						psg.largura -= Passo_X;
 						
-						for (i = 0; i < Qtde_chao; i++){
+						for (i = 0; i < cont2; i++){
 							if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
 								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
 									psg.x += Passo_X;
@@ -697,7 +769,7 @@ void fase1jogo(){
 						if (ande > QtdePsg-1) ande = QtdePsg-1;
 						else if (ande == QtdePsg-1) ande = 0;
 					}
-				}
+//				}
 
 				
 
@@ -711,7 +783,7 @@ void fase1jogo(){
 					if (ande > QtdePsg-1) ande = QtdePsg-1;
 					else if (ande == QtdePsg-1) ande = 0;
 					
-					for (i = 0; i < Qtde_chao; i++){
+					for (i = 0; i < cont2; i++){
 						if (psg.x <= colisao_chao[i].largura + (5*velocidade_pos) && psg.largura >= colisao_chao[i].x + (5*velocidade_pos)){
 							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio - (5*velocidade_pos); break;}	
 						}
@@ -719,23 +791,26 @@ void fase1jogo(){
 				}
 				velocidade_pos -= 0.5;
 			}
-*/
+/*
 if (GetKeyState(VK_LEFT)&0x80){
 	inicio += 5;
 }
 if (GetKeyState(VK_RIGHT)&0x80){
 	inicio -= 5;
-}
-/*			
+}*/
+			
 			if (GetKeyState(VK_RIGHT)&0x80 && !(GetKeyState(VK_LEFT)&0x80)) {
-				if (animation == false){
+//				if (animation == false){
 					if(psg.x < Larg/2){
 						psg.x += Passo_X;
 						psg.largura += Passo_X;
 						
-						for (i = 0; i < Qtde_chao; i++){
-							if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
-								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+						for (i = 0; i < cont2; i++){
+							if (psg.x <= colisao_chao[i].largura - (Passo_X) && psg.largura >= colisao_chao[i].x - (Passo_X)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
+								psg.x -= Passo_X;
+								psg.largura -= Passo_X; 
+								break;}	
 							}
 						}
 						
@@ -745,12 +820,12 @@ if (GetKeyState(VK_RIGHT)&0x80){
 						if (ande > QtdePsg-1) ande = QtdePsg-1;
 						else if (ande == QtdePsg-1) ande = 0;					
 						
-					}else if (-inicio < 60 ||(altitude >= 1230 && -inicio < 1230)){
+					}else if (-inicio < 60 ||(-altitude >= 1230)){
 						if (velocidade_neg < 1) velocidade_neg = 1;
 						inicio = inicio - (5*velocidade_neg);		
 						
 						
-						for (i = 0; i < Qtde_chao; i++){
+						for (i = 0; i < cont2; i++){
 							if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
 								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
 							}
@@ -765,9 +840,12 @@ if (GetKeyState(VK_RIGHT)&0x80){
 						psg.x += Passo_X;
 						psg.largura += Passo_X;
 						
-						for (i = 0; i < Qtde_chao; i++){
-							if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
-								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
+						for (i = 0; i < cont2; i++){
+							if (psg.x <= colisao_chao[i].largura - (Passo_X) && psg.largura >= colisao_chao[i].x - (Passo_X)){
+								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {
+								psg.x -= Passo_X;
+								psg.largura -= Passo_X; 
+								break;}	
 							}
 						}
 						
@@ -777,7 +855,7 @@ if (GetKeyState(VK_RIGHT)&0x80){
 						if (ande > QtdePsg-1) ande = QtdePsg-1;
 						else if (ande == QtdePsg-1) ande = 0;
 					}
-				}
+//				}
 			}else if(velocidade_neg > 0) {
 				if (Pulo == false && animation == false){
 					inicio = inicio - (5*velocidade_neg);	
@@ -787,7 +865,7 @@ if (GetKeyState(VK_RIGHT)&0x80){
 					if (ande > QtdePsg-1) ande = QtdePsg-1;
 					else if (ande == QtdePsg-1) ande = 0;
 						
-					for (i = 0; i < Qtde_chao; i++){
+					for (i = 0; i < cont2; i++){
 						if (psg.x <= colisao_chao[i].largura - (5*velocidade_neg) && psg.largura >= colisao_chao[i].x - (5*velocidade_neg)){
 							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio = inicio + (5*velocidade_neg); break;}	
 						}
@@ -795,7 +873,7 @@ if (GetKeyState(VK_RIGHT)&0x80){
 				}
 				velocidade_neg -= 0.5;
 			}
-*/			
+			
 			if (moved == false){
 				if(direcao == 1) direcao = 3;
 				else if(direcao == 2) direcao = 4;
@@ -807,11 +885,11 @@ if (GetKeyState(VK_RIGHT)&0x80){
 			else velocidade = velocidade_pos;
 
 	//________________________________________________________________________
-	/*
+	
 			if (GetKeyState(VK_UP)&0x80){
 				if (Pulo == false && tempo == 1 && chao == true && animation == false) Pulo = true;
 			}
-			*/
+			
 			if ((GetKeyState(VK_RIGHT)&0x80) && (GetKeyState(VK_UP)&0x80)) inercia_Right = true;
 			if ((GetKeyState(VK_LEFT)&0x80) && (GetKeyState(VK_UP)&0x80)) inercia_Left = true;
 			
@@ -829,10 +907,10 @@ if (GetKeyState(VK_RIGHT)&0x80){
 					
 					psg.y = psg.y - Passo_Y-15-(velocidade);
 					psg.altura = psg.altura - Passo_Y-15-(velocidade);
-					
+/*					
 					if (inercia_Right == true){
 						inicio -= Passo_X;
-						for (i = 0; i < Qtde_chao; i++){
+						for (i = 0; i < cont2; i++){
 							if (psg.x <= colisao_chao[i].largura - (Passo_X) && psg.largura >= colisao_chao[i].x - (Passo_X)){
 								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio += Passo_X; break;}	
 							}
@@ -840,17 +918,17 @@ if (GetKeyState(VK_RIGHT)&0x80){
 					} 
 					else if (inercia_Left == true){
 						inicio += Passo_X;
-						for (i = 0; i < Qtde_chao; i++){
+						for (i = 0; i < cont2; i++){
 							if (psg.x <= colisao_chao[i].largura + (Passo_X) && psg.largura >= colisao_chao[i].x + (Passo_X)){
 								if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y) {inicio -= Passo_X; break;}	
 							}
 						}
-					}
+					}*/
 	
 					if (pulando <= 18 && Altdesenho > 2)Altdesenho -= 7;
 
 									
-					for (i = 0; i < Qtde_chao; i++){
+					for (i = 0; i < cont2; i++){
 						if (psg.x <= colisao_chao[i].largura && psg.largura >= colisao_chao[i].x){
 							if(psg.y < colisao_chao[i].altura && psg.altura > colisao_chao[i].y){
 							psg.y = colisao_chao[i].altura;
@@ -875,7 +953,6 @@ if (GetKeyState(VK_RIGHT)&0x80){
 				else multiplicador = 1.5;
 				psg.y = psg.y + (Passo_Y*(tempo*multiplicador)); // constantemente puxa para baixo, com valor menor crescente, até superar o valor do pulo
 				psg.altura = psg.altura + (Passo_Y*(tempo*multiplicador));
-				
 				if(direcao == 1 || direcao == 3) direcao = 5;
 				else if(direcao == 2 || direcao == 4) direcao = 6;
 				
@@ -896,7 +973,7 @@ if (GetKeyState(VK_RIGHT)&0x80){
 			}
 			if (pulando == SpritePl-1) {pulando = 0; animation = false;}
 						
-			for (i = 0; i < Qtde_chao; i++){
+			for (i = 0; i < cont2; i++){
 				if (psg.x <= colisao_chao[i].largura && psg.largura >= colisao_chao[i].x){
 					if(psg.y <= colisao_chao[i].altura && psg.altura >= colisao_chao[i].y) {chao = true; break;}
 					else chao = false;
@@ -917,17 +994,19 @@ if (GetKeyState(VK_RIGHT)&0x80){
 			inercia_Left = false;
 			} 
 			
-			if (psg.y <= Alt/2 && chao == true) {
+			if (psg.y <= Alt/2 && chao == true && animation == false) {
 				altitude -= Alt/3;
 				psg.y += Alt/3;
 				psg.altura += Alt/3;
 			}
-			if (GetKeyState(VK_UP)&0x80) {
-				altitude += 5.0;
-			}
-			if (GetKeyState(VK_DOWN)&0x80) {
-				altitude -= 5.0;
-			}
+			
+			
+//			if (GetKeyState(VK_UP)&0x80) {
+//				altitude -= 5.0;
+//			}
+//			if (GetKeyState(VK_DOWN)&0x80) {
+//				altitude += 5.0;
+//			}
 			
 //			if (psg.altura >= Alt-25) break; //End game por queda
 			
