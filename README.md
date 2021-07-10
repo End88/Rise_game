@@ -1,5 +1,5 @@
-# Rise_game
-Repositório do jogo Rise
+# Rise_game (Projeto pausado, somente para leitura)
+Repositório do jogo Rise 
 _____________________________________________________________________________________________________________________
 
 
